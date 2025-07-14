@@ -1,0 +1,161 @@
+/* Daymodal.css */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.modal {
+  background-color: #fff;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  width: 100%;
+  max-width: 500px;
+  font-family: 'Segoe UI', sans-serif;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modal h3 {
+  margin-top: 0;
+  font-size: 1.6rem;
+  text-align: center;
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+
+.summary {
+  background-color: #f0f8ff;
+  padding: 1rem;
+  border-radius: 10px;
+  margin-bottom: 1.2rem;
+  text-align: center;
+  font-size: 0.95rem;
+  border: 1px solid #cce5ff;
+}
+
+.entries {
+  margin-bottom: 1.5rem;
+}
+
+.entries h4 {
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 0.25rem;
+}
+
+.entries ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.entries li {
+  background-color: #e6f2ff;
+  margin-bottom: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  border-left: 4px solid #007bff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.entry-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.entry-actions button {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: transform 0.2s;
+}
+
+.entry-actions button:hover {
+  transform: scale(1.2);
+}
+
+.form label {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+}
+
+.form input[type="text"],
+.form input[type="number"] {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 1rem;
+  margin-top: 0.25rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+.form textarea {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 0.95rem;
+  margin-top: 0.25rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.buttons button {
+  border-radius: 8px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+button.cancel {
+  background-color: #e0e0e0;
+}
+
+button.cancel:hover {
+  background-color: #c2c2c2;
+}
+
+
+.react-calendar__tile {
+  color: #000 !important;
+  font-weight: 500;
+  background-color: #fdfdfd;
+}
+
+.react-calendar__tile--now {
+  background: #ffffcc !important;
+  color: #000 !important;
+}
+
+.react-calendar__tile--active {
+  background: #007bff !important;
+  color: white !important;
+}
+
+.react-calendar__tile--disabled {
+  background-color: #f0f0f0 !important;
+  color: #aaa !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}

@@ -1,0 +1,71 @@
+/* Colores personalizados para días con estado */
+.react-calendar__tile.completed-day {
+  background-color: #c6f6d5 !important; /* verde claro */
+  color: #22543d !important;
+  font-weight: 600;
+}
+
+.react-calendar__tile.external-day {
+  background-color: #ffe0f0 !important; /* rosa pastel */
+  color: #9f1853 !important;
+  font-weight: 600;
+}
+
+.react-calendar__tile.holiday {
+  background-color: #ffdddd !important; /* rojo suave */
+  color: #861212 !important;
+  font-weight: 600;
+}
+
+.react-calendar__navigation {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.react-calendar__navigation button {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  color: #333;
+}
+
+.react-calendar__navigation button:disabled {
+  color: #aaa;
+}
+
+.react-calendar__navigation button:hover {
+  background-color: #e9ecef;
+  border-radius: 6px;
+}
+.react-calendar__tile {
+  background: white;
+  color: #333;
+  border-radius: 8px;
+  transition: all 0.2s ease-in-out;
+  padding: 0.75rem 0.25rem;
+}
+
+.react-calendar__tile:hover {
+  background-color: #e2e6ea;
+  cursor: pointer;
+}
+.react-calendar__tile {
+  animation: fadeSlide 0.2s ease-in;
+}
+
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
