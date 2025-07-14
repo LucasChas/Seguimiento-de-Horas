@@ -26,10 +26,10 @@
 
 /*chequear: */
 .react-calendar__tile--now {
-  background-color: #6c0000 !important;
-  color: #000000 !important;
+  background-color: #78efe9 !important;
+  color: #00a2a5 !important;
   font-weight: 600;
-  box-shadow: inset 0 0 0 2px #000000;
+  box-shadow: inset 0 0 0 2px #0084ff;
 }
 
 /* Navegación superior */
