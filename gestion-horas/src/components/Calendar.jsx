@@ -6,12 +6,13 @@ import { format, subDays } from 'date-fns';
 import './Calendar.css';
 import DayModal from './DayModal';
 import { supabase } from '../supabase/client';
-
+import MonthSummary from './MonthSummary';
 export default function WorkCalendar() {
   const [holidays, setHolidays] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
   const [workdays, setWorkdays] = useState([]);
   const [refreshKey, setRefreshKey] = useState(0); // 🔁 fuerza re-render
+  const [currentMonth, setCurrentMonth] = useState(new Date());
 
   useEffect(() => {
     fetchHolidays(2025).then(setHolidays);
@@ -107,20 +108,29 @@ export default function WorkCalendar() {
   };
 
   return (
-    <div>
-      <h2>Calendario de horas laborales</h2>
-      <Calendar
-        onClickDay={handleDayClick}
-        tileClassName={tileClassName}
-        tileDisabled={tileDisabled}
+    <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+  <div>
+    <h2>Calendario de horas laborales</h2>
+    <Calendar
+      onClickDay={handleDayClick}
+      tileClassName={tileClassName}
+      tileDisabled={tileDisabled}
+      onActiveStartDateChange={({ activeStartDate }) => setCurrentMonth(activeStartDate)}
+    />
+    {selectedDate && (
+      <DayModal
+        date={selectedDate}
+        onClose={handleModalClose}
+        onSaved={handleRefresh}
+        
       />
-      {selectedDate && (
-        <DayModal
-          date={selectedDate}
-          onClose={handleModalClose}
-          onSaved={handleRefresh} // 🔁 dispara nueva carga de datos
-        />
-      )}
-    </div>
+    )}
+  </div>
+
+    <MonthSummary 
+        holidays={holidays} 
+        workdays={workdays}
+        selectedDate={currentMonth} />
+</div>
   );
 }

@@ -1,0 +1,11 @@
+.month-summary {
+  padding: 1rem;
+  background: #f4f4f4;
+  border-radius: 8px;
+  width: 250px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  margin-left: 2rem;
+}
+.month-summary h4 {
+  margin-bottom: 0.5rem;
+}

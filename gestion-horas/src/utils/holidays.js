@@ -1,7 +1,9 @@
 // src/utils/holidays.js
+const enlace = "https://nolaborables.com.ar/api/v2/feriados"
 export const fetchHolidays = async (year = new Date().getFullYear()) => {
   try {
-    const response = await fetch(`/feriados/${year}`);
+    console.log("Año:",year)
+    const response = await fetch(`${enlace}/${year}`);
     if (!response.ok) throw new Error('Error al obtener feriados');
 
     const data = await response.json();
