@@ -1,5 +1,4 @@
-// Archivo: DayModal.jsx
-
+// ... imports
 import React, { useEffect, useState } from 'react';
 import './Daymodal.css';
 import Swal from 'sweetalert2';
@@ -11,15 +10,15 @@ export default function DayModal({ date, onClose, onSaved }) {
   const [hoursWorked, setHoursWorked] = useState('');
   const [isExternal, setIsExternal] = useState(false);
   const [description, setDescription] = useState('');
+  const [extraDescription, setExtraDescription] = useState('');
+  const [wantsExtraHours, setWantsExtraHours] = useState(false);
+  const [extraHours, setExtraHours] = useState('');
   const [existingEntries, setExistingEntries] = useState([]);
-  const [editMode, setEditMode] = useState(false);
-  const [editId, setEditId] = useState(null);
 
   const [externalCauses, setExternalCauses] = useState([]);
   const [selectedCauseId, setSelectedCauseId] = useState('');
   const [customCause, setCustomCause] = useState('');
   const [isFullDay, setIsFullDay] = useState(true);
-  const [customExternalHours, setCustomExternalHours] = useState('');
 
   useEffect(() => {
     fetchEntries();
@@ -36,135 +35,112 @@ export default function DayModal({ date, onClose, onSaved }) {
     if (data) setExternalCauses(data);
   };
 
-  const totalExternal = existingEntries
-    .filter(e => e.status === 'externo')
-    .reduce((sum, e) => sum + (e.hours_worked || 0), 0);
+  const totalLaboral = existingEntries.filter(e => e.status === 'trabajado').reduce((sum, e) => sum + (e.hours_worked || 0), 0);
+  const totalExternas = existingEntries.filter(e => e.status === 'externo').reduce((sum, e) => sum + (e.hours_worked || 0), 0);
+  const totalExtra = existingEntries.filter(e => e.status === 'extra').reduce((sum, e) => sum + (e.hours_worked || 0), 0);
+  const totalWorkedOrAbsent = totalLaboral + totalExternas;
+  const remaining = Math.max(0, 8 - totalWorkedOrAbsent);
 
-  const totalWorked = existingEntries
-    .filter(e => e.status !== 'externo')
-    .reduce((sum, e) => sum + (e.hours_worked || 0), 0);
+  const hasFullDayAbsence = existingEntries.some(e => e.status === 'externo' && e.hours_worked === 0);
 
-  const totalDayHours = totalExternal + totalWorked;
-  const remaining = Math.max(0, 8 - totalDayHours);
-  const isFormDisabled = totalDayHours >= 8 && !editMode;
+  const handleSubmit = async () => {
+    let error;
 
-  const handleDelete = async (id) => {
-    const confirm = await Swal.fire({
+    if (isExternal) {
+      if (!selectedCauseId) return Swal.fire('Error', 'Seleccioná una causa.', 'error');
+
+      let causeName = '';
+      let fullDayFlag = true;
+
+      if (selectedCauseId === 'otra') {
+        if (!customCause.trim()) return Swal.fire('Error', 'Ingresá la causa personalizada.', 'error');
+        const nombre = customCause.trim();
+        const { data: existingCause, error: findError } = await supabase.from('absence_reasons').select('*').eq('name', nombre).single();
+        if (findError && findError.code !== 'PGRST116') return Swal.fire('Error', 'No se pudo verificar la causa.', 'error');
+
+        if (existingCause) {
+          causeName = existingCause.name;
+          fullDayFlag = existingCause.full_day;
+        } else {
+          const { data: newCause, error: insertError } = await supabase.from('absence_reasons').insert([{ name: nombre, full_day: isFullDay }]).select().single();
+          if (insertError) return Swal.fire('Error', 'No se pudo guardar la nueva causa.', 'error');
+          causeName = newCause.name;
+          fullDayFlag = newCause.full_day;
+        }
+      } else {
+        const cause = externalCauses.find(c => String(c.id) === selectedCauseId);
+        if (!cause) return Swal.fire('Error', 'Seleccioná una causa válida.', 'error');
+        causeName = cause.name;
+        fullDayFlag = cause.full_day;
+      }
+
+      if (fullDayFlag) {
+        if (totalWorkedOrAbsent >= 8) return Swal.fire('Error', 'Ya se alcanzaron las 8 horas. No se puede cargar esta ausencia.', 'error');
+        ({ error } = await supabase.from('workdays').insert({ date, hours_worked: 0, status: 'externo', description: causeName }));
+      } else {
+        const parsedHours = parseFloat(hoursWorked);
+        if (isNaN(parsedHours) || parsedHours <= 0 || parsedHours > remaining)
+          return Swal.fire('Error', `Ingresá una cantidad válida de horas (máx. ${remaining}).`, 'error');
+        ({ error } = await supabase.from('workdays').insert({ date, hours_worked: parsedHours, status: 'externo', description: causeName }));
+      }
+    } else {
+      const parsedHours = parseFloat(hoursWorked);
+      const parsedExtra = parseFloat(extraHours || 0);
+
+      if (totalWorkedOrAbsent < 8 && !hasFullDayAbsence) {
+        if (isNaN(parsedHours) || parsedHours <= 0 || parsedHours > remaining)
+          return Swal.fire('Error', `Ingresá entre 0.1 y ${remaining} horas laborales.`, 'error');
+        if (!description.trim()) return Swal.fire('Error', 'La descripción es obligatoria.', 'error');
+        ({ error } = await supabase.from('workdays').insert({ date, hours_worked: parsedHours, status: 'trabajado', description: description.trim() }));
+      } else {
+        if (hasFullDayAbsence) return Swal.fire('Error', 'No se puede cargar horas extra con una ausencia que cubre todo el día.', 'error');
+        if (!wantsExtraHours) return Swal.fire('Error', 'No se puede cargar más horas laborales.', 'error');
+        if (isNaN(parsedExtra) || parsedExtra <= 0) return Swal.fire('Error', 'Ingresá una cantidad válida de horas extra.', 'error');
+        if (!extraDescription.trim()) return Swal.fire('Error', 'La descripción es obligatoria para horas extra.', 'error');
+        ({ error } = await supabase.from('workdays').insert({ date, hours_worked: parsedExtra, status: 'extra', description: extraDescription.trim() }));
+      }
+    }
+
+    if (error) return Swal.fire('Error', 'No se pudo guardar.', 'error');
+    Swal.fire('Éxito', 'Registro guardado.', 'success');
+    onSaved();
+    onClose();
+  };
+
+  const handleDelete = async (entry) => {
+    const result = await Swal.fire({
       title: '¿Eliminar entrada?',
       text: 'Esta acción no se puede deshacer.',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
+      cancelButtonText: 'Cancelar'
     });
-
-    if (confirm.isConfirmed) {
-      const { error } = await supabase.from('workdays').delete().eq('id', id);
+    if (result.isConfirmed) {
+      const { error } = await supabase.from('workdays').delete().eq('id', entry.id);
       if (error) return Swal.fire('Error', 'No se pudo eliminar.', 'error');
-      Swal.fire('Eliminado', 'Registro eliminado.', 'success');
+      Swal.fire('Eliminado', 'La entrada fue eliminada.', 'success');
       fetchEntries();
     }
   };
 
-  const handleSubmit = async () => {
-    if (totalDayHours >= 8 && !editMode) {
-      return Swal.fire('Error', 'Ya se alcanzaron las 8 horas del día.', 'error');
-    }
+  const capitalize = (text) => text.charAt(0).toUpperCase() + text.slice(1);
 
-    let insertData = { date };
-    let error = null;
-
-    if (isExternal) {
-      let causeName = '';
-      let fullDay = true;
-      let hours = 0;
-
-      if (!selectedCauseId) return Swal.fire('Error', 'Seleccioná una causa.', 'error');
-
-      if (selectedCauseId === 'otra') {
-        if (!customCause.trim()) return Swal.fire('Error', 'Ingresá la causa personalizada.', 'error');
-
-        const { data: newCause, error: insertError } = await supabase
-          .from('absence_reasons')
-          .insert([{ name: customCause.trim(), full_day: isFullDay }])
-          .select()
-          .single();
-
-        if (insertError) return Swal.fire('Error', 'No se pudo guardar la nueva causa.', 'error');
-
-        causeName = newCause.name;
-        fullDay = newCause.full_day;
-      } else {
-        const cause = externalCauses.find(c => c.id.toString() === selectedCauseId);
-        if (!cause) return Swal.fire('Error', 'Seleccioná una causa válida.', 'error');
-        causeName = cause.name;
-        fullDay = cause.full_day;
-      }
-
-      if (fullDay) {
-        hours = 8;
-      } else {
-        const parsed = parseFloat(customExternalHours);
-        if (isNaN(parsed) || parsed <= 0 || parsed > remaining) {
-          return Swal.fire('Error', `Ingresá entre 0.1 y ${remaining} horas.`, 'error');
-        }
-        hours = parsed;
-      }
-
-      insertData = {
-        ...insertData,
-        hours_worked: hours,
-        status: 'externo',
-        description: `${causeName}`,
-      };
-    } else {
-      const parsed = parseFloat(hoursWorked);
-      if (isNaN(parsed) || parsed <= 0 || parsed > remaining) {
-        return Swal.fire('Error', `Ingresá entre 0.1 y ${remaining} horas.`, 'error');
-      }
-
-      if (!description.trim()) {
-        return Swal.fire('Error', 'La descripción es obligatoria.', 'error');
-      }
-
-      insertData = {
-        ...insertData,
-        hours_worked: parsed,
-        status: 'trabajado',
-        description: description.trim(),
-      };
-    }
-
-    if (editMode) {
-      ({ error } = await supabase.from('workdays').update(insertData).eq('id', editId));
-    } else {
-      ({ error } = await supabase.from('workdays').insert(insertData));
-    }
-
-    if (error) return Swal.fire('Error', 'No se pudo guardar.', 'error');
-
-    Swal.fire('Éxito', editMode ? 'Registro actualizado.' : 'Registro guardado.', 'success');
-    onSaved();
-    onClose();
-  };
-
-  const startEdit = (entry) => {
-    setEditMode(true);
-    setEditId(entry.id);
-    setHoursWorked(entry.hours_worked);
-    setDescription(entry.description);
-    setIsExternal(entry.status === 'externo');
+  const shouldShowHoursField = () => {
+    if (selectedCauseId === 'otra') return !isFullDay;
+    const selected = externalCauses.find(c => String(c.id) === selectedCauseId);
+    return selected?.full_day === false;
   };
 
   return (
     <div className="modal-overlay">
       <div className="modal">
-        <h3>{format(new Date(date), "EEEE d 'de' MMMM", { locale: es })}</h3>
+        <h3>{capitalize(format(new Date(date), "EEEE d 'de' MMMM", { locale: es }))}</h3>
 
         <div className="summary">
-          <p><strong>Horas cargadas:</strong> {totalWorked}</p>
-          <p><strong>Horas externas:</strong> {totalExternal}</p>
-          <p><strong>Horas restantes:</strong> {remaining}</p>
+          <p><strong>Horas laborales registradas (con horas extra):</strong> {totalLaboral + totalExtra}</p>
+          <p><strong>Horas justificadas por inasistencias:</strong> {totalExternas}</p>
+          <p><strong>Horas restantes del día laboral:</strong> {remaining}</p>
         </div>
 
         <div className="entries">
@@ -175,13 +151,13 @@ export default function DayModal({ date, onClose, onSaved }) {
             <ul>
               {existingEntries.map((e, idx) => (
                 <li key={idx} className="entry-item">
-                  <span>{e.hours_worked} hs - {e.description} ({e.status})</span>
-                  <div>
-                    <div className="entry-actions">
-  <button className="edit-btn" onClick={() => startEdit(e)}>✏️</button>
-  <button className="delete-btn" onClick={() => handleDelete(e.id)}>🗑️</button>
-</div>
-
+                  <span>
+                    {e.status === 'externo' && e.hours_worked === 0
+                      ? 'Jornada completa'
+                      : `${e.hours_worked} hs`} - {e.description} ({e.status})
+                  </span>
+                  <div className="entry-actions">
+                    <button onClick={() => handleDelete(e)}>🗑️</button>
                   </div>
                 </li>
               ))}
@@ -190,57 +166,25 @@ export default function DayModal({ date, onClose, onSaved }) {
         </div>
 
         <div className="form">
-          <label>
-            <input
-              type="checkbox"
-              checked={isExternal}
-              onChange={() => setIsExternal(!isExternal)}
-              disabled={isFormDisabled && !editMode}
-            />
-            Ausencia por causas externas
-          </label>
-
-          {!isExternal && (
-            <>
-              <label>
-                Horas trabajadas:
-                <input
-                  type="number"
-                  value={hoursWorked}
-                  step="0.5"
-                  onChange={(e) => setHoursWorked(e.target.value)}
-                  disabled={isFormDisabled && !editMode}
-                  placeholder={`Máximo ${remaining}`}
-                />
-              </label>
-              <label>
-                Descripción:
-                <input
-                  type="text"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  disabled={isFormDisabled && !editMode}
-                />
-              </label>
-            </>
+          {!hasFullDayAbsence && (
+            <label>
+              <input
+                type="checkbox"
+                checked={isExternal}
+                onChange={() => setIsExternal(!isExternal)}
+                disabled={totalWorkedOrAbsent >= 8 || totalExtra > 0}
+              />
+              Ausencia por causas externas
+            </label>
           )}
 
-          {isExternal && (
+          {isExternal ? (
             <>
-              <label>
-                Causa:
-                <select
-                  value={selectedCauseId}
-                  onChange={(e) => {
-                    setSelectedCauseId(e.target.value);
-                    const found = externalCauses.find(c => c.id.toString() === e.target.value);
-                    setIsFullDay(found?.full_day ?? true);
-                  }}
-                  className="select-input"
-                >
+              <label>Causa:
+                <select value={selectedCauseId} onChange={(e) => setSelectedCauseId(e.target.value)}>
                   <option value="">-- Seleccioná una causa --</option>
                   {externalCauses.map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
+                    <option key={c.id} value={String(c.id)}>{c.name} {c.full_day ? "(día completo)" : "(parcial)"}</option>
                   ))}
                   <option value="otra">Otra...</option>
                 </select>
@@ -248,21 +192,11 @@ export default function DayModal({ date, onClose, onSaved }) {
 
               {selectedCauseId === 'otra' && (
                 <>
-                  <label>
-                    Nueva causa:
-                    <input
-                      type="text"
-                      value={customCause}
-                      onChange={(e) => setCustomCause(e.target.value)}
-                    />
+                  <label>Nueva causa:
+                    <input type="text" value={customCause} onChange={(e) => setCustomCause(e.target.value)} />
                   </label>
-
-                  <label>
-                    ¿Ocupará todo el día?
-                    <select
-                      value={isFullDay ? 'sí' : 'no'}
-                      onChange={(e) => setIsFullDay(e.target.value === 'sí')}
-                    >
+                  <label>¿Ocupará todo el día?
+                    <select value={isFullDay ? 'sí' : 'no'} onChange={(e) => setIsFullDay(e.target.value === 'sí')}>
                       <option value="sí">Sí</option>
                       <option value="no">No</option>
                     </select>
@@ -270,25 +204,49 @@ export default function DayModal({ date, onClose, onSaved }) {
                 </>
               )}
 
-              {!isFullDay && (
+              {shouldShowHoursField() && (
                 <label>
-                  ¿Cuántas horas va a ocupar esta actividad?
-                  <input
-                    type="number"
-                    step="0.5"
-                    value={customExternalHours}
-                    onChange={(e) => setCustomExternalHours(e.target.value)}
-                    placeholder={`Máximo ${remaining}`}
-                  />
+                  Cantidad de horas:
+                  <input type="number" step="0.5" value={hoursWorked} onChange={(e) => setHoursWorked(e.target.value)} placeholder={`Máximo ${remaining}`} />
                 </label>
+              )}
+            </>
+          ) : (
+            <>
+              {totalWorkedOrAbsent < 8 && !hasFullDayAbsence && (
+                <>
+                  <label>Horas trabajadas:
+                    <input type="number" step="0.5" value={hoursWorked} onChange={(e) => setHoursWorked(e.target.value)} placeholder={`Máximo ${remaining}`} />
+                  </label>
+                  <label>Descripción:
+                    <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} />
+                  </label>
+                </>
+              )}
+
+              {totalWorkedOrAbsent >= 8 && !hasFullDayAbsence && (
+                <>
+                  <label>
+                    <input type="checkbox" checked={wantsExtraHours} onChange={() => setWantsExtraHours(!wantsExtraHours)} />
+                    ¿Cargar horas extra?
+                  </label>
+                  {wantsExtraHours && (
+                    <>
+                      <label>Horas extra:
+                        <input type="number" step="0.5" value={extraHours} onChange={(e) => setExtraHours(e.target.value)} />
+                      </label>
+                      <label>Descripción:
+                        <input type="text" value={extraDescription} onChange={(e) => setExtraDescription(e.target.value)} />
+                      </label>
+                    </>
+                  )}
+                </>
               )}
             </>
           )}
 
           <div className="buttons">
-            <button onClick={handleSubmit} disabled={isFormDisabled && !editMode}>
-              {editMode ? 'Actualizar' : 'Guardar'}
-            </button>
+            <button onClick={handleSubmit}>Guardar</button>
             <button onClick={onClose} className="cancel">Cancelar</button>
           </div>
         </div>
