@@ -1,29 +1,45 @@
-/* Colores personalizados para días con estado */
+/* ===================== */
+/* Estilos del Calendario */
+/* ===================== */
+
+/* Colores personalizados para días especiales */
 .react-calendar__tile.completed-day {
-  background-color: #c6f6d5 !important; /* verde claro */
-  color: #22543d !important;
+  background-color: #e6ffed !important;
+  color: #217346 !important;
   font-weight: 600;
+  box-shadow: inset 0 0 0 2px #94d3a2;
 }
 
 .react-calendar__tile.external-day {
-  background-color: #ffe0f0 !important; /* rosa pastel */
-  color: #9f1853 !important;
+  background-color: #f4bf70 !important;
+  color: #ff6600 !important;
   font-weight: 600;
+  box-shadow: inset 0 0 0 2px #ffa967;
 }
 
 .react-calendar__tile.holiday {
-  background-color: #ffdddd !important; /* rojo suave */
-  color: #861212 !important;
+  background-color: #ffcdcd !important;
+  color: #b60000 !important;
   font-weight: 600;
+  box-shadow: inset 0 0 0 2px #ff7066;
 }
 
-.react-calendar__navigation {
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  margin-bottom: 1rem;
-  padding: 0.5rem;
+/*chequear: */
+.react-calendar__tile--now {
+  background-color: #6c0000 !important;
+  color: #000000 !important;
   font-weight: 600;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: inset 0 0 0 2px #000000;
+}
+
+/* Navegación superior */
+.react-calendar__navigation {
+  background-color: #ffffff;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .react-calendar__navigation button {
@@ -33,28 +49,36 @@
   font-size: 1rem;
   cursor: pointer;
   color: #333;
-}
-
-.react-calendar__navigation button:disabled {
-  color: #aaa;
+  transition: background-color 0.2s ease;
 }
 
 .react-calendar__navigation button:hover {
-  background-color: #e9ecef;
+  background-color: #f1f3f5;
   border-radius: 6px;
 }
+
+/* Tiles generales */
 .react-calendar__tile {
-  background: white;
+  background: #ffffff;
   color: #333;
-  border-radius: 8px;
-  transition: all 0.2s ease-in-out;
+  border-radius: 10px;
   padding: 0.75rem 0.25rem;
+  transition: all 0.2s ease-in-out;
+  position: relative;
 }
 
 .react-calendar__tile:hover {
-  background-color: #e2e6ea;
+  background-color: #dee2e6;
   cursor: pointer;
+  transform: scale(1.02);
 }
+
+.react-calendar__tile:disabled {
+  color: #aaa;
+  background-color: #f8f9fa;
+}
+
+/* Transición animada al renderizar */
 .react-calendar__tile {
   animation: fadeSlide 0.2s ease-in;
 }
@@ -68,4 +92,19 @@
     opacity: 1;
     transform: scale(1);
   }
+}
+
+/* ====================== */
+/* Estilo para el Tooltip */
+/* ====================== */
+.__react_component_tooltip {
+  background: #343a40 !important;
+  color: #fff !important;
+  font-size: 0.85rem !important;
+  padding: 0.6rem 0.8rem !important;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  z-index: 100;
+  max-width: 200px;
+  text-align: center;
 }

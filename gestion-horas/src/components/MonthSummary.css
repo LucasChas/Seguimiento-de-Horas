@@ -1,11 +1,35 @@
 .month-summary {
-  padding: 1rem;
-  background: #f4f4f4;
-  border-radius: 8px;
-  width: 250px;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  width: 280px;
   margin-left: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+
+.month-summary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
 .month-summary h4 {
-  margin-bottom: 0.5rem;
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #1a237e;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 0.5rem;
+}
+
+.month-summary p {
+  margin: 0.6rem 0;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.month-summary strong {
+  color: #0d47a1;
 }

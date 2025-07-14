@@ -1,22 +1,19 @@
-// src/utils/holidays.js
-const enlace = "https://nolaborables.com.ar/api/v2/feriados"
+import { supabase } from '../supabase/client';
+
 export const fetchHolidays = async (year = new Date().getFullYear()) => {
   try {
-    console.log("Año:",year)
-    const response = await fetch(`${enlace}/${year}`);
-    if (!response.ok) throw new Error('Error al obtener feriados');
+    const { data, error } = await supabase
+      .from('holidays')
+      .select('dia, mes, motivo');
 
-    const data = await response.json();
+    if (error) throw error;
 
-    return data.map(feriado => {
-      const { dia, mes } = feriado;
-      const month = String(mes).padStart(2, '0');
-      const day = String(dia).padStart(2, '0');
-      return `${year}-${month}-${day}`;
+    return data.map(({ dia, mes, motivo }) => {
+      const date = `${year}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+      return { date, motivo };
     });
-
-  } catch (error) {
-    console.error('Fallo al traer feriados:', error);
+  } catch (e) {
+    console.error('❌ Error al traer feriados desde Supabase:', e.message);
     return [];
   }
 };
