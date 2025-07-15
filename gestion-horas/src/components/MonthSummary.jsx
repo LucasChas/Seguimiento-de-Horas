@@ -34,46 +34,49 @@ export default function MonthSummary({ workdays, selectedDate, holidays = [] }) 
 
     const monthKey = format(selectedDate, 'yyyy-MM');
 
-    const dayTotals = new Map();
-    let externalDays = new Set();
+    const worked = new Set();
+    const external = new Set();
 
-    workdays.forEach(({ date, hours_worked, status }) => {
-      if (!date.startsWith(monthKey)) return;
-
-      if (status === 'externo') {
-        externalDays.add(date);
-      } else {
-        const prev = dayTotals.get(date) || 0;
-        dayTotals.set(date, prev + (hours_worked || 0));
+    workdays.forEach(wd => {
+      if (wd.date.startsWith(monthKey)) {
+        if (wd.status === 'trabajado') worked.add(wd.date);
+        else if (wd.status === 'externo') external.add(wd.date);
       }
     });
 
-    let sumHoras = 0;
-    let workedDays = 0;
+    const totalWorked = Array.from(worked).reduce((sum, date) => {
+      const entry = workdays.find(w => w.date === date);
+      return sum + (entry?.hours_worked || 0);
+    }, 0);
 
-    for (const [date, total] of dayTotals.entries()) {
-      sumHoras += total;
-      if (total >= 8) {
-        workedDays++;
-      }
-    }
+    setLoadedHours(totalWorked);
 
-    const remainingDays = laborables.length - workedDays - externalDays.size;
-
-    setLoadedHours(sumHoras);
+    const workedDays = worked.size;
+    const externalDays = external.size;
+    const remainingDays = laborables.length - workedDays - externalDays;
 
     setPieData([
       { name: 'Trabajados', value: workedDays },
-      { name: 'Externos', value: externalDays.size },
+      { name: 'Externos', value: externalDays },
       { name: 'Restantes', value: remainingDays },
     ]);
   }, [workdays, selectedDate, holidays]);
+  const formatHoras = (hs) => {
+  const totalMinutes = Math.round(hs * 60);
+  const horas = Math.floor(totalMinutes / 60);
+  const minutos = totalMinutes % 60;
+
+  if (horas > 0 && minutos > 0) return `${horas}h ${minutos}m`;
+  if (horas > 0) return `${horas}h`;
+  return `${minutos}m`;
+};
 
   return (
     <div className="month-summary">
       <h4>Resumen del Mes</h4>
-      <p><strong>Horas esperadas:</strong> {expectedHours} hs</p>
-      <p><strong>Horas cargadas:</strong> {loadedHours} hs</p>
+      <p><strong>Horas esperadas:</strong> {formatHoras(expectedHours)}</p>
+      <p><strong>Horas cargadas:</strong> {formatHoras(loadedHours)}</p>
+
 
       <div style={{ height: 240, marginTop: '1rem' }}>
         <ResponsiveContainer width="100%" height="100%">

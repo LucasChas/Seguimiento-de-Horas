@@ -35,6 +35,15 @@ export default function DayModal({ date, onClose, onSaved }) {
     if (data) setExternalCauses(data);
   };
 
+  const parseTimeInput = (input) => {
+    const regex = /(?:(\d+(?:[.,]\d+)?)h)?\s*(?:(\d+)\s*m)?/i;
+    const match = input.trim().replace(',', '.').match(regex);
+    if (!match) return NaN;
+    const hours = parseFloat(match[1]) || 0;
+    const minutes = parseFloat(match[2]) || 0;
+    return hours + minutes / 60;
+  };
+
   const totalLaboral = existingEntries.filter(e => e.status === 'trabajado').reduce((sum, e) => sum + (e.hours_worked || 0), 0);
   const totalExternas = existingEntries.filter(e => e.status === 'externo').reduce((sum, e) => sum + (e.hours_worked || 0), 0);
   const totalExtra = existingEntries.filter(e => e.status === 'extra').reduce((sum, e) => sum + (e.hours_worked || 0), 0);
@@ -78,18 +87,18 @@ export default function DayModal({ date, onClose, onSaved }) {
         if (totalWorkedOrAbsent >= 8) return Swal.fire('Error', 'Ya se alcanzaron las 8 horas. No se puede cargar esta ausencia.', 'error');
         ({ error } = await supabase.from('workdays').insert({ date, hours_worked: 0, status: 'externo', description: causeName }));
       } else {
-        const parsedHours = parseFloat(hoursWorked);
+        const parsedHours = parseTimeInput(hoursWorked);
         if (isNaN(parsedHours) || parsedHours <= 0 || parsedHours > remaining)
           return Swal.fire('Error', `Ingresá una cantidad válida de horas (máx. ${remaining}).`, 'error');
         ({ error } = await supabase.from('workdays').insert({ date, hours_worked: parsedHours, status: 'externo', description: causeName }));
       }
     } else {
-      const parsedHours = parseFloat(hoursWorked);
-      const parsedExtra = parseFloat(extraHours || 0);
+      const parsedHours = parseTimeInput(hoursWorked);
+      const parsedExtra = parseTimeInput(extraHours || '');
 
       if (totalWorkedOrAbsent < 8 && !hasFullDayAbsence) {
         if (isNaN(parsedHours) || parsedHours <= 0 || parsedHours > remaining)
-          return Swal.fire('Error', `Ingresá entre 0.1 y ${remaining} horas laborales.`, 'error');
+          return Swal.fire('Error', `Ingresá una cantidad valida, no mayor a: ${formatHoras(remaining)} horas laborales.`, 'error');
         if (!description.trim()) return Swal.fire('Error', 'La descripción es obligatoria.', 'error');
         ({ error } = await supabase.from('workdays').insert({ date, hours_worked: parsedHours, status: 'trabajado', description: description.trim() }));
       } else {
@@ -132,17 +141,26 @@ export default function DayModal({ date, onClose, onSaved }) {
     return selected?.full_day === false;
   };
 
+  const formatHoras = (hs) => {
+    const totalMinutes = Math.round(hs * 60);
+    const horas = Math.floor(totalMinutes / 60);
+    const minutos = totalMinutes % 60;
+    if (horas > 0 && minutos > 0) return `${horas}h ${minutos}m`;
+    if (horas > 0) return `${horas}h`;
+    return `${minutos}m`;
+  };
+
   return (
     <div className="modal-overlay">
       <div className="modal">
-       <h3>{capitalize(format(new Date(date + 'T12:00:00'), "EEEE d 'de' MMMM", { locale: es }))}</h3>
-
+        <h3>{capitalize(format(new Date(date + 'T12:00:00'), "EEEE d 'de' MMMM", { locale: es }))}</h3>
 
         <div className="summary">
-          <p><strong>Horas laborales registradas (con horas extra):</strong> {totalLaboral + totalExtra}</p>
-          <p><strong>Horas justificadas por inasistencias:</strong> {totalExternas}</p>
-          <p><strong>Horas restantes del día laboral:</strong> {remaining}</p>
-        </div>
+  <p><strong>Horas laborales registradas (con horas extra):</strong> {formatHoras(totalLaboral + totalExtra)}</p>
+  <p><strong>Horas justificadas por inasistencias:</strong> {formatHoras(totalExternas)}</p>
+  <p><strong>Horas restantes del día laboral:</strong> {formatHoras(remaining)}</p>
+</div>
+
 
         <div className="entries">
           <h4>Historial del día:</h4>
@@ -155,7 +173,7 @@ export default function DayModal({ date, onClose, onSaved }) {
                   <span>
                     {e.status === 'externo' && e.hours_worked === 0
                       ? 'Jornada completa'
-                      : `${e.hours_worked} hs`} - {e.description} ({e.status})
+                      : `${formatHoras(e.hours_worked)} - ${e.description} (${e.status})`}
                   </span>
                   <div className="entry-actions">
                     <button onClick={() => handleDelete(e)}>🗑️</button>
@@ -208,7 +226,7 @@ export default function DayModal({ date, onClose, onSaved }) {
               {shouldShowHoursField() && (
                 <label>
                   Cantidad de horas:
-                  <input type="number" step="0.5" value={hoursWorked} onChange={(e) => setHoursWorked(e.target.value)} placeholder={`Máximo ${remaining}`} />
+                  <input type="text" value={hoursWorked} onChange={(e) => setHoursWorked(e.target.value)} placeholder="Ej: 1h 30m, 45m, 2h" />
                 </label>
               )}
             </>
@@ -217,7 +235,7 @@ export default function DayModal({ date, onClose, onSaved }) {
               {totalWorkedOrAbsent < 8 && !hasFullDayAbsence && (
                 <>
                   <label>Horas trabajadas:
-                    <input type="number" step="0.5" value={hoursWorked} onChange={(e) => setHoursWorked(e.target.value)} placeholder={`Máximo ${remaining}`} />
+                    <input type="text" value={hoursWorked} onChange={(e) => setHoursWorked(e.target.value)} placeholder="Ej: 1h 30m, 45m, 2h" />
                   </label>
                   <label>Descripción:
                     <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} />
@@ -234,7 +252,7 @@ export default function DayModal({ date, onClose, onSaved }) {
                   {wantsExtraHours && (
                     <>
                       <label>Horas extra:
-                        <input type="number" step="0.5" value={extraHours} onChange={(e) => setExtraHours(e.target.value)} />
+                        <input type="text" value={extraHours} onChange={(e) => setExtraHours(e.target.value)} placeholder="Ej: 1h, 45m, 0.5h" />
                       </label>
                       <label>Descripción:
                         <input type="text" value={extraDescription} onChange={(e) => setExtraDescription(e.target.value)} />
