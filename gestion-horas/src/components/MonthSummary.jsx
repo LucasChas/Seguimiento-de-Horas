@@ -45,9 +45,11 @@ export default function MonthSummary({ workdays, selectedDate, holidays = [] }) 
     });
 
     const totalWorked = Array.from(worked).reduce((sum, date) => {
-      const entry = workdays.find(w => w.date === date);
-      return sum + (entry?.hours_worked || 0);
-    }, 0);
+  const entriesForDay = workdays.filter(w => w.date === date && w.status !== 'externo');
+  const totalForDay = entriesForDay.reduce((acc, w) => acc + (w.hours_worked || 0), 0);
+  return sum + totalForDay;
+}, 0);
+
 
     setLoadedHours(totalWorked);
 
