@@ -135,7 +135,8 @@ export default function DayModal({ date, onClose, onSaved }) {
   return (
     <div className="modal-overlay">
       <div className="modal">
-        <h3>{capitalize(format(new Date(date), "EEEE d 'de' MMMM", { locale: es }))}</h3>
+       <h3>{capitalize(format(new Date(date + 'T12:00:00'), "EEEE d 'de' MMMM", { locale: es }))}</h3>
+
 
         <div className="summary">
           <p><strong>Horas laborales registradas (con horas extra):</strong> {totalLaboral + totalExtra}</p>
