@@ -13,15 +13,14 @@
 }
 
 .modal {
-  background-color: #fff;
-  padding: 2rem;
-  border-radius: 16px;
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25);
-  width: 100%;
-  max-width: 520px;
-  font-family: 'Segoe UI', sans-serif;
-  animation: fadeIn 0.3s ease-in-out;
+  position: relative;
+  padding: 2em;
+  background-color: white;
+  border-radius: 1em;
+  max-width: 90vw;
+  margin: auto;
 }
+
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-10px); }
@@ -195,4 +194,20 @@ select:focus {
   border-color: #007bff;
   outline: none;
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+.close-icon {
+  position: absolute;
+  top: 1.5vh;
+  right: 2vh;
+  font-size: 2em;
+  color: #d00;
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 1000;
+  transition: transform 0.2s ease;
+}
+
+.close-icon:hover {
+  transform: scale(1.2);
 }

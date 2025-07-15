@@ -108,3 +108,72 @@
   max-width: 200px;
   text-align: center;
 }
+
+
+.add-holiday-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: #0217ff;
+  color: white;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.65rem 1.4rem;
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.add-holiday-btn:hover {
+  background-color: #0d47a1;
+  transform: translateY(-1px);
+}
+
+.add-holiday-btn:active {
+  background-color: #0b3c91;
+  transform: scale(0.98);
+}
+
+
+.custom-popup {
+  border-radius: 16px !important;
+  padding: 2rem 2rem 1.5rem !important;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.custom-confirm {
+  background-color: #1a237e !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  padding: 0.6rem 1.5rem !important;
+  font-size: 1rem !important;
+  box-shadow: 0 2px 8px rgba(26, 35, 126, 0.4) !important;
+}
+
+.custom-cancel {
+  background-color: #e0e0e0 !important;
+  color: #333 !important;
+  font-weight: 500 !important;
+  border-radius: 8px !important;
+  padding: 0.6rem 1.2rem !important;
+  font-size: 1rem !important;
+  margin-left: 0.5rem;
+}
+
+.swal2-input {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+
+
+.swal2-popup {
+  overflow-x: hidden !important;  /* ya lo tenías, bien */
+  max-width: 500px !important;    /* nuevo: evita que el contenido se desborde horizontalmente */
+  width: 100% !important;         /* asegura que no rompa en pantallas chicas */
+  box-sizing: border-box !important;
+}
+

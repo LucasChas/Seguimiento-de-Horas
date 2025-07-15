@@ -8,7 +8,7 @@ import DayModal from './DayModal';
 import { supabase } from '../supabase/client';
 import MonthSummary from './MonthSummary';
 import { Tooltip } from 'react-tooltip';
-const Swal = await import('sweetalert2')
+import AddHolidayModal from './AddHolidayModal';
 
 export default function WorkCalendar() {
   const [holidays, setHolidays] = useState([]);
@@ -16,6 +16,7 @@ export default function WorkCalendar() {
   const [workdays, setWorkdays] = useState([]);
   const [refreshKey, setRefreshKey] = useState(0);
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [showAddModal, setShowAddModal] = useState(false);
 
   useEffect(() => {
     const year = currentMonth.getFullYear();
@@ -29,35 +30,31 @@ export default function WorkCalendar() {
   const fetchWorkdays = async () => {
     const { data, error } = await supabase
       .from('workdays')
-      .select('date, hours_worked, status');
+      .select('date, hours_worked, status, description');
     if (!error && data) setWorkdays(data);
   };
 
   const tileDisabled = ({ date, view }) => {
     if (view === 'month') {
-      return date.getDay() === 0 || date.getDay() === 6; // domingo o sábado
+      return date.getDay() === 0 || date.getDay() === 6;
     }
     return false;
   };
 
-const tileClassName = ({ date, view }) => {
-  const formatted = format(date, 'yyyy-MM-dd');
+  const tileClassName = ({ date, view }) => {
+    const formatted = format(date, 'yyyy-MM-dd');
+    if (view === 'month') {
+      if (holidayMap.has(formatted)) return 'holiday';
 
-  if (view === 'month') {
-    if (holidayMap.has(formatted)) return 'holiday';
+      const dayEntries = workdays.filter(d => d.date === formatted);
+      const totalWorked = dayEntries.reduce((sum, d) => sum + (d.hours_worked || 0), 0);
+      const isExternal = dayEntries.some(d => d.status === 'externo');
 
-    const dayEntries = workdays.filter(d => d.date === formatted);
-
-    const totalWorked = dayEntries.reduce((sum, d) => sum + (d.hours_worked || 0), 0);
-    const isExternal = dayEntries.some(d => d.status === 'externo');
-
-    if (isExternal) return 'external-day';
-    if (totalWorked >= 8) return 'completed-day';
-  }
-
-  return null;
-};
-
+      if (isExternal) return 'external-day';
+      if (totalWorked >= 8) return 'completed-day';
+    }
+    return null;
+  };
 
   const tileContent = ({ date, view }) => {
     const formatted = format(date, 'yyyy-MM-dd');
@@ -73,11 +70,36 @@ const tileClassName = ({ date, view }) => {
     return null;
   };
 
+  const isLaborable = (date) => {
+    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+    const isFeriado = holidayMap.has(format(date, 'yyyy-MM-dd'));
+    return !isWeekend && !isFeriado;
+  };
+
+  const handleAddCustomHoliday = () => {
+    setShowAddModal(true);
+  };
+
+  const handleAddHolidayConfirm = async ({ date, motivo }) => {
+    const [year, month, day] = date.split('-').map(Number);
+    const { error } = await supabase.from('holidays').insert({
+      dia: day,
+      mes: month,
+      motivo,
+      tipo: 'personalizado',
+      custom: true
+    });
+
+    setShowAddModal(false);
+    if (!error) {
+      setRefreshKey(prev => prev + 1);
+    } else {
+      console.error('Error al agregar feriado:', error.message);
+    }
+  };
+
   const handleDayClick = async (date) => {
     const selected = format(date, 'yyyy-MM-dd');
-    const isWeekend = (d) => d.getDay() === 0 || d.getDay() === 6;
-    const isFeriado = (d) => holidayMap.has(format(d, 'yyyy-MM-dd'));
-    const isLaborable = (d) => !isWeekend(d) && !isFeriado(d);
 
     if (!isLaborable(date)) {
       setSelectedDate(selected);
@@ -89,7 +111,6 @@ const tileClassName = ({ date, view }) => {
       prevDateObj = subDays(prevDateObj, 1);
     }
 
-    // 🛑 Evita validar con días laborales de meses anteriores
     if (!isSameMonth(date, prevDateObj)) {
       setSelectedDate(selected);
       return;
@@ -102,11 +123,7 @@ const tileClassName = ({ date, view }) => {
       .eq('date', prevDate);
 
     if (error || !prevEntries || prevEntries.length === 0) {
-      Swal.default.fire({
-        icon: 'error',
-        title: 'Día anterior no cargado',
-        text: `No podés cargar el ${format(date, 'dd/MM')} porque el último día laboral (${format(prevDateObj, 'dd/MM')}) no fue registrado.`,
-      });
+      alert(`No podés cargar el ${format(date, 'dd/MM')} porque el día anterior (${format(prevDateObj, 'dd/MM')}) no fue registrado.`);
       return;
     }
 
@@ -117,52 +134,47 @@ const tileClassName = ({ date, view }) => {
       setSelectedDate(selected);
     } else {
       const remaining = 8 - totalWorked;
-      const result = await Swal.default.fire({
-        icon: 'question',
-        title: 'Carga incompleta',
-        html: `El último día laboral (<b>${format(prevDateObj, 'dd/MM')}</b>) tiene <b>${totalWorked}hs</b> cargadas.<br>¿Querés completarlas (faltan <b>${remaining}hs</b>) o cargar el nuevo día <b>${format(date, 'dd/MM')}</b>?`,
-        showCancelButton: true,
-        showDenyButton: true,
-        confirmButtonText: `Completar ${format(prevDateObj, 'dd/MM')}`,
-        cancelButtonText: `Cargar ${format(date, 'dd/MM')}`,
-        denyButtonText: 'Salir',
-        customClass: {
-          confirmButton: 'swal2-confirm',
-          cancelButton: 'swal2-cancel',
-          denyButton: 'swal2-deny',
-        },
-      });
-
-      if (result.isConfirmed) {
-        setSelectedDate(prevDate);
-      } else if (result.isDismissed || result.isDenied) {
-        // salir
-      } else if (result.isCanceled) {
-        setSelectedDate(selected);
-      }
+      const continuar = window.confirm(
+        `El día anterior (${format(prevDateObj, 'dd/MM')}) tiene ${totalWorked}hs cargadas. ¿Querés completarlas o continuar con el nuevo día (${format(date, 'dd/MM')})?`
+      );
+      setSelectedDate(continuar ? prevDate : selected);
     }
   };
 
   const handleModalClose = () => setSelectedDate(null);
-  const handleRefresh = () => setRefreshKey(prev => prev + 1);
 
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start' }}>
       <div>
         <h2>Calendario de horas laborales</h2>
         <Calendar
-          onClickDay={handleDayClick}
+          onClickDay={(date, e) => handleDayClick(date)}
           tileClassName={tileClassName}
           tileDisabled={tileDisabled}
           tileContent={tileContent}
           onActiveStartDateChange={({ activeStartDate }) => setCurrentMonth(activeStartDate)}
         />
+
         <Tooltip id="holiday-tooltip" />
+
         {selectedDate && (
           <DayModal
             date={selectedDate}
             onClose={handleModalClose}
-            onSaved={handleRefresh}
+            onSaved={() => setRefreshKey(prev => prev + 1)}
+          />
+        )}
+
+        <div style={{ marginTop: '1.5rem' }}>
+          <button className="add-holiday-btn" onClick={handleAddCustomHoliday}>
+            ➕ Agregar feriado personalizado
+          </button>
+        </div>
+
+        {showAddModal && (
+          <AddHolidayModal
+            onClose={() => setShowAddModal(false)}
+            onSubmit={handleAddHolidayConfirm}
           />
         )}
       </div>
