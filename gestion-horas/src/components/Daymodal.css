@@ -211,3 +211,104 @@ select:focus {
 .close-icon:hover {
   transform: scale(1.2);
 }
+
+
+.scroll-section {
+  max-height: 25vh;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.fixed-footer {
+  position: sticky;
+  bottom: 0;
+  background-color: white;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+  border-top: 1px solid #ccc;
+}
+
+.fixed-footer button {
+  padding: 0.7rem 1.2rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 10px;
+  background-color: #007bff;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.fixed-footer button:hover {
+  background-color: #0056b3;
+}
+
+
+.entries-title {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 0.3rem;
+  background-color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+
+
+
+
+
+
+@media (max-width: 768px) {
+  .modal {
+    width: 90vw;
+    height: 95vh;
+    padding: 1rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .fixed-footer {
+    position: sticky;
+    bottom: 0;
+    background-color: white;
+    padding: 1rem 0 0.5rem;
+    margin-top: auto;
+    z-index: 10;
+  }
+
+  .form label {
+    font-size: 0.9rem;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  select {
+    font-size: 0.95rem;
+  }
+
+  .summary {
+    font-size: 0.95rem;
+    padding: 0.75rem;
+  }
+
+  .entry-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .close-icon {
+    top: 1rem;
+    right: 1rem;
+    font-size: 1.6rem;
+  }
+}

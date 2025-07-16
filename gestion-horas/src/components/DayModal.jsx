@@ -188,130 +188,128 @@ const handleSubmit = async () => {
     return `${minutos}m`;
   };
 
-  return (
-    <div className="modal-overlay">
-      <div className="modal">
-          <button className="close-icon" onClick={onClose}>×</button>
-          <h3>{capitalize(format(new Date(date + 'T12:00:00'), "EEEE d 'de' MMMM", { locale: es }))}</h3>
+return (
+  <div className="modal-overlay">
+    <div className="modal">
+      <button className="close-icon" onClick={onClose}>×</button>
 
+      <h3>{capitalize(format(new Date(date + 'T12:00:00'), "EEEE d 'de' MMMM", { locale: es }))}</h3>
 
+      <div className="summary">
+        <p><strong>Horas laborales registradas (con horas extra):</strong> {formatHoras(totalLaboral + totalExtra)}</p>
+        <p><strong>Horas justificadas por inasistencias:</strong> {formatHoras(totalExternas)}</p>
+        <p><strong>Horas restantes del día laboral:</strong> {formatHoras(remaining)}</p>
+      </div>
+    <h4 className='entries-title'>Historial del día:</h4>
+      <div className="entries scroll-section">
+        
+        {existingEntries.length === 0 ? (
+          <p>No hay registros aún.</p>
+        ) : (
+          <ul>
+            {existingEntries.map((e, idx) => (
+              <li key={idx} className="entry-item">
+                <span>
+                  {e.status === 'externo' && e.hours_worked === 0
+                    ? `8h - ${e.description} (externo)`
+                    : `${formatHoras(e.hours_worked)} - ${e.description} (${e.status})`}
+                </span>
+                <div className="entry-actions">
+                  <button onClick={() => handleDelete(e)}>🗑️</button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
-        <div className="summary">
-          <p><strong>Horas laborales registradas (con horas extra):</strong> {formatHoras(totalLaboral + totalExtra)}</p>
-          <p><strong>Horas justificadas por inasistencias:</strong> {formatHoras(totalExternas)}</p>
-          <p><strong>Horas restantes del día laboral:</strong> {formatHoras(remaining)}</p>
-        </div>
+      <div className="form">
+        {!hasFullDayAbsence && totalWorkedOrAbsent < 8 && (
+          <label>
+            <input
+              type="checkbox"
+              checked={isExternal}
+              onChange={() => setIsExternal(!isExternal)}
+              disabled={totalWorkedOrAbsent >= 8 || totalExtra > 0}
+            /> Ausencia por causas externas
+          </label>
+        )}
 
-        <div className="entries">
-          <h4>Historial del día:</h4>
-          {existingEntries.length === 0 ? (
-            <p>No hay registros aún.</p>
-          ) : (
-            <ul>
-              {existingEntries.map((e, idx) => (
-                <li key={idx} className="entry-item">
-                  <span>
-                    {e.status === 'externo' && e.hours_worked === 0
-                      ? `8h - ${e.description} (externo)`
-                      : `${formatHoras(e.hours_worked)} - ${e.description} (${e.status})`}
-                  </span>
-                  <div className="entry-actions">
-                    <button onClick={() => handleDelete(e)}>🗑️</button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        <div className="form">
-          {!hasFullDayAbsence && totalWorkedOrAbsent < 8 && (
-            <label>
-              
-              <input
-                type="checkbox"
-                checked={isExternal}
-                onChange={() => setIsExternal(!isExternal)}
-                disabled={totalWorkedOrAbsent >= 8 || totalExtra > 0}
-              /> Ausencia por causas externas
-              
-    
+        {isExternal ? (
+          <>
+            <label>Causa:
+              <select value={selectedCauseId} onChange={(e) => setSelectedCauseId(e.target.value)}>
+                <option value="">-- Seleccioná una causa --</option>
+                {externalCauses.map(c => (
+                  <option key={c.id} value={String(c.id)}>{c.name} {c.full_day ? "(día completo)" : "(parcial)"}</option>
+                ))}
+                <option value="otra">Otra...</option>
+              </select>
             </label>
-          )}
 
-          {isExternal ? (
-            <>
-              <label>Causa:
-                <select value={selectedCauseId} onChange={(e) => setSelectedCauseId(e.target.value)}>
-                  <option value="">-- Seleccioná una causa --</option>
-                  {externalCauses.map(c => (
-                    <option key={c.id} value={String(c.id)}>{c.name} {c.full_day ? "(día completo)" : "(parcial)"}</option>
-                  ))}
-                  <option value="otra">Otra...</option>
-                </select>
+            {selectedCauseId === 'otra' && (
+              <>
+                <label>Nueva causa:
+                  <input type="text" value={customCause} onChange={(e) => setCustomCause(e.target.value)} />
+                </label>
+                <label>¿Ocupará todo el día?
+                  <select value={isFullDay ? 'sí' : 'no'} onChange={(e) => setIsFullDay(e.target.value === 'sí')}>
+                    <option value="sí">Sí</option>
+                    <option value="no">No</option>
+                  </select>
+                </label>
+              </>
+            )}
+
+            {shouldShowHoursField() && (
+              <label>
+                Cantidad de horas:
+                <input type="text" value={hoursWorked} onChange={(e) => setHoursWorked(e.target.value)} placeholder="Ej: 1h 30m, 45m, 2h" />
               </label>
-
-              {selectedCauseId === 'otra' && (
-                <>
-                  <label>Nueva causa:
-                    <input type="text" value={customCause} onChange={(e) => setCustomCause(e.target.value)} />
-                  </label>
-                  <label>¿Ocupará todo el día?
-                    <select value={isFullDay ? 'sí' : 'no'} onChange={(e) => setIsFullDay(e.target.value === 'sí')}>
-                      <option value="sí">Sí</option>
-                      <option value="no">No</option>
-                    </select>
-                  </label>
-                </>
-              )}
-
-              {shouldShowHoursField() && (
-                <label>
-                  Cantidad de horas:
+            )}
+          </>
+        ) : (
+          <>
+            {totalWorkedOrAbsent < 8 && !hasFullDayAbsence && (
+              <>
+                <label>Horas trabajadas:
                   <input type="text" value={hoursWorked} onChange={(e) => setHoursWorked(e.target.value)} placeholder="Ej: 1h 30m, 45m, 2h" />
                 </label>
-              )}
-            </>
-          ) : (
-            <>
-              {totalWorkedOrAbsent < 8 && !hasFullDayAbsence && (
-                <>
-                  <label>Horas trabajadas:
-                    <input type="text" value={hoursWorked} onChange={(e) => setHoursWorked(e.target.value)} placeholder="Ej: 1h 30m, 45m, 2h" />
-                  </label>
-                  <label>Descripción:
-                    <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} />
-                  </label>
-                </>
-              )}
+                <label>Descripción:
+                  <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} />
+                </label>
+              </>
+            )}
 
-              {puedeCargarExtras && (
-                <>
-                  <label>
-                    <input type="checkbox" checked={wantsExtraHours} onChange={() => setWantsExtraHours(!wantsExtraHours)} />
-                    ¿Cargar horas extra?
-                  </label>
-                  {wantsExtraHours && (
-                    <>
-                      <label>Horas extra:
-                        <input type="text" value={extraHours} onChange={(e) => setExtraHours(e.target.value)} placeholder="Ej: 1h, 45m, 0.5h" />
-                      </label>
-                      <label>Descripción:
-                        <input type="text" value={extraDescription} onChange={(e) => setExtraDescription(e.target.value)} />
-                      </label>
-                    </>
-                  )}
-                </>
-              )}
-            </>
-          )}
-
-          <div className="buttons">
-            {hasChanges && <button onClick={handleSubmit}>Guardar</button>}
-          </div>
-
-        </div>
+            {puedeCargarExtras && (
+              <>
+                <label>
+                  <input type="checkbox" checked={wantsExtraHours} onChange={() => setWantsExtraHours(!wantsExtraHours)} />
+                  ¿Cargar horas extra?
+                </label>
+                {wantsExtraHours && (
+                  <>
+                    <label>Horas extra:
+                      <input type="text" value={extraHours} onChange={(e) => setExtraHours(e.target.value)} placeholder="Ej: 1h, 45m, 0.5h" />
+                    </label>
+                    <label>Descripción:
+                      <input type="text" value={extraDescription} onChange={(e) => setExtraDescription(e.target.value)} />
+                    </label>
+                  </>
+                )}
+              </>
+            )}
+          </>
+        )}
       </div>
+
+      {hasChanges && (
+        <div className="fixed-footer">
+          <button onClick={handleSubmit}>Guardar</button>
+        </div>
+      )}
     </div>
-  );
+  </div>
+);
+
 }
