@@ -8,7 +8,7 @@ import DayModal from '../DayModal/DayModal';
 import { supabase } from '../../supabase/client';
 import MonthSummary from '../MonthSummary/MonthSummary';
 import { Tooltip } from 'react-tooltip';
-import AddHolidayModal from '../HolidayModal/AddHolidayModal';
+
 import Swal from 'sweetalert2';
 
 export default function WorkCalendar() {
@@ -196,11 +196,7 @@ const result = await Swal.fire({
           />
         )}
 
-        <div style={{ marginTop: '1.5rem' }}>
-          <button className="add-holiday-btn" onClick={handleAddCustomHoliday}>
-            ➕ Agregar feriado personalizado
-          </button>
-        </div>
+        
 
         {showAddModal && (
           <AddHolidayModal

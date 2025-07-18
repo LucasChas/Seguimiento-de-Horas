@@ -2,6 +2,107 @@
 /* Estilos del Calendario */
 /* ===================== */
 
+/* ——— Clases para días especiales ——— */
+.react-calendar__tile--active {
+  background-color: #81d4fa !important;
+  color: #004d40 !important;
+}
+
+/* ——— Contenedor general ——— */
+.react-calendar {
+  width: 90%;
+  max-width: 600px;
+  margin: 1.5rem auto !important;    /* centra y separa vertical */
+  padding: 1rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 1.1rem;                 /* escala base */
+  background: linear-gradient(135deg, #f8fbff 0%, #ffffff 100%);
+  border-radius: 12px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* ——— Cabecera de navegación ——— */
+.react-calendar__navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+}
+
+.react-calendar__navigation button {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.react-calendar__navigation button:enabled:hover,
+.react-calendar__navigation button:enabled:focus {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 6px;
+}
+
+/* ——— Días de la semana ——— */
+.react-calendar__month-view__weekdays {
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.react-calendar__month-view__weekdays__weekday {
+  padding: 0.5rem 0;
+}
+
+.react-calendar__month-view__weekdays__weekday abbr {
+  font-size: 1rem;
+}
+
+/* ——— Tiles (días) ——— */
+.react-calendar__tile {
+  min-height: 70px;
+  padding: 1rem 0;
+  font-size: 1rem;
+  border-radius: 8px !important;
+  transition: transform 0.1s ease, background-color 0.2s ease;
+}
+
+.react-calendar__tile:hover {
+  transform: scale(1.05);
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+/* Días de otros meses más tenues */
+.react-calendar__tile--neighboringMonth {
+  color: #ccc;
+}
+
+/* Días deshabilitados */
+.react-calendar__month-view__days__day--disabled {
+  color: #ddd;
+}
+
+/* Ajustes en vistas año/década/siglo */
+.react-calendar__year-view__months__month,
+.react-calendar__decade-view__years__year,
+.react-calendar__century-view__decades__decade {
+  font-size: 1.2rem;
+}
+
+/* ——— Responsivo ——— */
+@media (max-width: 768px) {
+  .react-calendar {
+    max-width: 90%;
+    font-size: 1rem;
+  }
+  .react-calendar__navigation button {
+    font-size: 1rem;
+  }
+  .react-calendar__tile {
+    min-height: 60px;
+    font-size: 0.9rem;
+  }
+}
 /* Colores personalizados para días especiales */
 .react-calendar__tile.completed-day {
   background-color: #e6ffed !important;
@@ -26,177 +127,5 @@
 
 /*chequear: */
 .react-calendar__tile--now {
-  background-color: #78efe9 !important;
-  color: #00a2a5 !important;
-  font-weight: 600;
-  box-shadow: inset 0 0 0 2px #0084ff;
-}
-
-/* Navegación superior */
-.react-calendar__navigation {
-  background-color: #ffffff;
-  border-radius: 12px;
-  margin-bottom: 1rem;
-  padding: 0.5rem 1rem;
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.react-calendar__navigation button {
-  background: none;
-  border: none;
-  padding: 0.5rem;
-  font-size: 1rem;
-  cursor: pointer;
-  color: #333;
-  transition: background-color 0.2s ease;
-}
-
-.react-calendar__navigation button:hover {
-  background-color: #f1f3f5;
-  border-radius: 6px;
-}
-
-/* Tiles generales */
-.react-calendar__tile {
-  background: #ffffff;
-  color: #333;
-  border-radius: 10px;
-  padding: 0.75rem 0.25rem;
-  transition: all 0.2s ease-in-out;
-  position: relative;
-}
-
-.react-calendar__tile:hover {
-  background-color: #dee2e6;
-  cursor: pointer;
-  transform: scale(1.02);
-}
-
-.react-calendar__tile:disabled {
-  color: #aaa;
-  background-color: #f8f9fa;
-}
-
-/* Transición animada al renderizar */
-.react-calendar__tile {
-  animation: fadeSlide 0.2s ease-in;
-}
-
-@keyframes fadeSlide {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-/* ====================== */
-/* Estilo para el Tooltip */
-/* ====================== */
-.__react_component_tooltip {
-  background: #343a40 !important;
-  color: #fff !important;
-  font-size: 0.85rem !important;
-  padding: 0.6rem 0.8rem !important;
-  border-radius: 6px !important;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  z-index: 100;
-  max-width: 200px;
-  text-align: center;
-}
-
-
-.add-holiday-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  background-color: #0217ff;
-  color: white;
-  font-weight: 600;
-  font-size: 0.95rem;
-  padding: 0.65rem 1.4rem;
-  border: none;
-  border-radius: 10px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  transition: background-color 0.2s ease, transform 0.2s ease;
-}
-
-.add-holiday-btn:hover {
-  background-color: #0d47a1;
-  transform: translateY(-1px);
-}
-
-.add-holiday-btn:active {
-  background-color: #0b3c91;
-  transform: scale(0.98);
-}
-
-
-.custom-popup {
-  border-radius: 16px !important;
-  padding: 2rem 2rem 1.5rem !important;
-  font-family: 'Segoe UI', sans-serif;
-}
-
-.custom-confirm {
-  background-color: #1a237e !important;
-  color: #fff !important;
-  font-weight: 600 !important;
-  border-radius: 8px !important;
-  padding: 0.6rem 1.5rem !important;
-  font-size: 1rem !important;
-  box-shadow: 0 2px 8px rgba(26, 35, 126, 0.4) !important;
-}
-
-.custom-cancel {
-  background-color: #e0e0e0 !important;
-  color: #333 !important;
-  font-weight: 500 !important;
-  border-radius: 8px !important;
-  padding: 0.6rem 1.2rem !important;
-  font-size: 1rem !important;
-  margin-left: 0.5rem;
-}
-
-.swal2-input {
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box;
-}
-
-
-.swal2-popup {
-  overflow-x: hidden !important;  /* ya lo tenías, bien */
-  max-width: 500px !important;    /* nuevo: evita que el contenido se desborde horizontalmente */
-  width: 100% !important;         /* asegura que no rompa en pantallas chicas */
-  box-sizing: border-box !important;
-}
-
-
-
-
-.swal-btn-blue {
-  background-color: #5b60f5 !important;
-  color: #fff !important;
-}
-.swal-btn-outline {
-  background-color: rgb(27, 218, 104) !important;
-  color: #fff !important;
-}
-.swal-btn-gray {
-  background-color: #e53935 !important;
-  color: #fff !important;
-}
-/* 🔹 Modal más angosto */
-.swal-compact-popup.swal2-popup {
-  width:40vw !important;
-  max-width: 90vw !important;
-  padding: 1.2rem 1.4rem !important;
-  font-size: 0.95rem !important;
-  box-sizing: border-box;
+    box-shadow: inset 0 0 0 2px #909910;
 }
