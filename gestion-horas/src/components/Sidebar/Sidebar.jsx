@@ -52,7 +52,6 @@ export default function Sidebar({ onNavigate }) {
         <button onClick={() => onNavigate('summary')}>
           📊 {isOpen && <span>Estadísticas</span>}
         </button>
-
         {/* ——— Botón Agregar Feriado ——— */}
         <button
           
@@ -60,15 +59,14 @@ export default function Sidebar({ onNavigate }) {
         >
           ➕ {isOpen && <span>Agregar Feriado</span>}
         </button>
+          <hr className="separator" />
+        
+        
       </nav>
 
-      <hr className="separator" />
+      
 
-      <div className="sidebar-footer">
-        <button className="logout-btn" onClick={handleLogout}>
-          🔓 {isOpen && <span>Cerrar sesión</span>}
-        </button>
-      </div>
+         
 
       {/* ——— Modal de Feriado ——— */}
       {showAddHoliday && (
@@ -76,7 +74,18 @@ export default function Sidebar({ onNavigate }) {
           onClose={handleCloseModal}
           onSubmit={handleSubmitHoliday}
         />
+
+        
       )}
+
+      <div className='sidebar-footer'> 
+          
+          <button onClick={handleLogout}>
+            🔓 {isOpen && <span>Cerrar sesión</span>}
+                </button>
+                
+        </div>
+      
     </div>
   );
 }
