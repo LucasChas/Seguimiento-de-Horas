@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import { fetchHolidays } from '../utils/holidays';
+import { fetchHolidays } from '../../utils/holidays';
 import { format, subDays, isSameMonth } from 'date-fns';
 import './Calendar.css';
-import DayModal from './DayModal';
-import { supabase } from '../supabase/client';
-import MonthSummary from './MonthSummary';
+import DayModal from '../DayModal/DayModal';
+import { supabase } from '../../supabase/client';
+import MonthSummary from '../MonthSummary/MonthSummary';
 import { Tooltip } from 'react-tooltip';
-import AddHolidayModal from './AddHolidayModal';
+import AddHolidayModal from '../HolidayModal/AddHolidayModal';
 import Swal from 'sweetalert2';
 
 export default function WorkCalendar() {

@@ -1,0 +1,176 @@
+/* Login.css */
+.auth-container {
+  max-width: 400px;
+  margin: 5vh auto;
+  padding: 2rem;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.auth-container h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1a237e;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.auth-container input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.auth-container button {
+  width: 100%;
+  padding: 0.8rem 1.2rem;
+  background-color: #1a237e;
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.auth-container button:hover {
+  background-color: #0d154e;
+}
+
+.auth-container p {
+  margin-top: 1rem;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.auth-container p span {
+  color: #1976d2;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.auth-container p span:hover {
+  text-decoration: underline;
+}
+
+.password-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.password-container input {
+  width: 100%;
+  padding-right: 2.5rem;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 0.8rem;
+  top: 0.4em;
+  cursor: pointer;
+  font-size: 1.2rem;
+  user-select: none;
+}
+
+/* NUEVO: Reglas de contraseña como popup flotante con flechita al lado del input */
+/* Popup flotante de reglas */
+.password-popup {
+  position: absolute;
+  top: 50%;
+  left: 110%;
+  transform: translateY(-50%);
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  width: 280px;
+  z-index: 20;
+}
+
+.password-popup ul {
+  margin: 0;
+  padding: 0;
+}
+
+.password-popup li {
+  list-style: none;
+  margin-bottom: 0.4rem;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.password-popup li.valid {
+  color: #388e3c;
+}
+
+.password-popup li.invalid {
+  color: #d32f2f;
+}
+
+
+/*---------------------------------*/
+
+.input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.input-invalid {
+  border-color: #d32f2f !important;
+}
+
+/* Tooltip estilo triangulito */
+.input-tooltip {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: #fff;
+  color: #333;
+  font-size: 0.85rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  z-index: 15;
+  white-space: nowrap;
+}
+
+.input-tooltip.left {
+  left: 105%;
+}
+
+.input-tooltip.right {
+  left: 110%;
+}
+
+/* Flechita del tooltip */
+.tooltip-arrow {
+  position: absolute;
+  width: 0;
+  height: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  border-style: solid;
+}
+
+.tooltip-arrow.left {
+  left: -8px;
+  border-width: 8px 8px 8px 0;
+  border-color: transparent #ccc transparent transparent;
+}
+
+.tooltip-arrow.right {
+  left: -8px;
+  border-width: 8px 8px 8px 0;
+  border-color: transparent #ccc transparent transparent;
+}

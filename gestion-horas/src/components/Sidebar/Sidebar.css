@@ -1,0 +1,143 @@
+/* Sidebar.css */
+.sidebar {
+  width: 240px;
+  background: linear-gradient(to bottom, #0d47a1, #002171);
+  color: #fff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 0.5rem;
+  transition: width 0.3s ease;
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.2);
+  overflow-x: hidden;
+}
+
+.sidebar.collapsed {
+  width: 72px;
+}
+.sidebar-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 0.8rem;
+  position: relative;
+}
+
+.logo-placeholder {
+  width: 100%;
+  height: 80px;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+
+.logo-placeholder img {
+  max-height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+  border-radius: 10px;
+  background-color: #fff;
+  padding: 4px;
+  box-shadow: 0 0 6px rgba(0,0,0,0.3);
+}
+
+.sidebar.collapsed .logo-placeholder {
+  height: 56px;
+  padding: 4px;
+}
+
+.toggle-btn {
+  margin-bottom: 1rem;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1.4rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  align-self: flex-end;
+}
+
+.toggle-btn:hover {
+  transform: scale(1.2);
+}
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0 0.8rem;
+}
+
+.sidebar-nav button {
+  background: none;
+  border: none;
+  color: #f1f1f1;
+  font-size: 1rem;
+  text-align: left;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sidebar-nav button:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  transform: translateX(4px);
+}
+
+.sidebar.collapsed .sidebar-nav button {
+  justify-content: center;
+  padding: 0.75rem 0;
+}
+
+.sidebar.collapsed .sidebar-nav button span {
+  display: none;
+}
+
+.separator {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  margin: 1rem 0 0.5rem;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 0 0.8rem 1.2rem;
+}
+
+.logout-btn {
+  background: none;
+  border: none;
+  color: #ffcccb;
+  font-size: 1rem;
+  text-align: left;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.logout-btn:hover {
+  background-color: rgba(255, 204, 204, 0.1);
+  transform: translateX(4px);
+}
+
+.sidebar.collapsed .logout-btn {
+  justify-content: center;
+  padding: 0.75rem 0;
+}
+
+.sidebar.collapsed .logout-btn span {
+  display: none;
+}

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './Daymodal.css';
 import Swal from 'sweetalert2';
-import { supabase } from '../supabase/client';
+import { supabase } from '../../supabase/client';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 

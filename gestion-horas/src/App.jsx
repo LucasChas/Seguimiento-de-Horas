@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from './supabase/client';
-import Auth from './components/Auth';
-import WorkCalendar from './components/Calendar'; // tu componente principal
+import Login from './components/Auth/Login/Login';
+import Register from './components/Auth/Register/Register';
+import WorkCalendar from './components/Calendar/Calendar';
+import Sidebar from './components/Sidebar/Sidebar';
 
 export default function App() {
   const [session, setSession] = useState(null);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [view, setView] = useState('calendar');
 
   useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -18,12 +22,34 @@ export default function App() {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  if (!session) return <Auth onLogin={() => supabase.auth.getSession().then(({ data }) => setSession(data.session))} />;
+  const handleLogin = () => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+  };
+
+  const handleNavigate = (target) => {
+    if (target === 'logout') {
+      setSession(null);
+    } else {
+      setView(target);
+    }
+  };
+
+  if (!session) {
+    return isRegistering ? (
+      <Register switchToLogin={() => setIsRegistering(false)} />
+    ) : (
+      <Login onLogin={handleLogin} switchToRegister={() => setIsRegistering(true)} />
+    );
+  }
 
   return (
-    <div>
-      <button onClick={() => supabase.auth.signOut()}>Cerrar sesión</button>
-      <WorkCalendar />
+    <div style={{ display: 'flex' }}>
+      <Sidebar onNavigate={handleNavigate} />
+      <div style={{ flex: 1, padding: '2rem' }}>
+        {view === 'calendar' && <WorkCalendar />}
+        {view === 'summary' && <MonthSummary selectedDate={new Date()} workdays={[]} />}
+        {view === 'profile' && <p>🧑 Aquí irá la pantalla de perfil (próximamente).</p>}
+      </div>
     </div>
   );
 }
