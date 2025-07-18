@@ -1,26 +1,24 @@
 /* MonthSummary.css */
 
-/* ——— Contenedor principal ——— */
+/* ——— CONTENEDOR PRINCIPAL DEL COMPONENTE "MonthSummary" (parte fija del resumen y gráfico) ——— */
 .month-summary {
   background: #ffffff;
-  border-radius: 12px;
+  border-radius: 0.75rem;
   padding: 1.5rem 2rem;
   width: 70vh;
   margin-left: 2rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.08);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: #333;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-
-
 
 .month-summary h4 {
   font-size: 1.3rem;
   font-weight: 600;
   margin-bottom: 1rem;
   color: #1a237e;
-  border-bottom: 2px solid #e0e0e0;
+  border-bottom: 2px solid #ffffff;
   padding-bottom: 0.5rem;
 }
 
@@ -34,8 +32,7 @@
   color: #0d47a1;
 }
 
-
-/* ——— “Exportar Todo” fuera del modal ——— */
+/* ——— BOTÓN DE EXPORTACIÓN GENERAL A EXCEL ——— */
 .export-all-button {
   margin-top: 1rem;
   padding: 0.6rem 1.2rem;
@@ -53,76 +50,95 @@
   background-color: #43a047;
 }
 
-/* ——— Modal “card” interno ——— */
+/* ——— MODAL QUE APARECE AL HACER CLIC EN EL GRÁFICO DE TORTA ——— */
 .month-summary-modal {
-  background: #fff;
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   padding: 1rem;
   font-family: inherit;
-  color: #333;
-  max-width: 700px;
   
+  max-width: auto;
 }
 
-/* ——— Contenedor scroll de la tabla (solo vertical) ——— */
+/* ——— CONTENEDOR SCROLL PARA LA TABLA DENTRO DEL MODAL ——— */
 .table-scroll {
   max-height: 80vh;
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: auto;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
-  max-width: 156vh;
+  
+  box-sizing: border-box;
 }
 
-/* ——— Tabla estilizada ——— */
+/* ——— TABLA EN EL MODAL ——— */
 .month-summary-modal table {
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
   font-size: 0.95rem;
 }
-
+.swal2-html-container{
+  background-color: #fff !important;
+}
+/* ——— ENCABEZADO DE LA TABLA (Fijado arriba) ——— */
 .month-summary-modal thead {
-  background: #f1f5f9;
+  background: #70a2d4;
   position: sticky;
   top: 0;
   z-index: 1;
+  max-width: 100%;
 }
 
+/* ——— CELDAS DE LA TABLA ——— */
 .month-summary-modal th,
 .month-summary-modal td {
-  padding: 12px 16px;
+  padding: 6px 12px;
   text-align: left;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #ffffff;
   word-wrap: break-word;
 }
 
-.month-summary-modal tbody tr:nth-child(even) {
-  background: #fafbfc;
+/* ——— ESTILOS ESPECÍFICOS PARA LA COLUMNA DE "Causa" ——— */
+.month-summary-modal td:nth-child(2) {
+  white-space: pre-line;
+  word-break: break-word;
+  
 }
 
+/* ——— ANCHOS PERSONALIZADOS PARA CADA COLUMNA ——— */
+.month-summary-modal th:nth-child(1) { width: 20%; }
+.month-summary-modal th:nth-child(2) { width: 50%; }
+.month-summary-modal th:nth-child(3) { width: 20%; }
+
+/* ——— FILAS PARES DE LA TABLA ——— */
+.month-summary-modal tbody tr:nth-child(even) {
+  background: #eef0f1;
+}
+
+/* ——— HOVER SOBRE FILAS ——— */
 .month-summary-modal tbody tr:hover {
   background: #e3f2fd;
 }
 
-/* ——— Controles footer del modal ——— */
+/* ——— CONTROLES DEL MODAL (botones y paginación) ——— */
 .modal-controls {
   display: flex;
   align-items: center;
-  justify-content: flex-start;  /* todos los botones alineados a la izquierda */
-  gap: 1rem;                     /* separación uniforme entre Exportar, Paginación y Cerrar */
+  justify-content: flex-start;
+  gap: 1rem;
   margin-top: 1rem;
 }
-/* Paginación (sin margen automático) */
+
+/* ——— PAGINACIÓN DENTRO DEL MODAL ——— */
 .pagination {
   display: flex;
   align-items: center;
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
 .pagination-button {
-  padding: 8px 14px;
+  padding: 0.8rem 1.4rem;
   margin: 0 0.5rem;
   border: none;
   border-radius: 4px;
@@ -145,7 +161,7 @@
   font-weight: 500;
 }
 
-/* Botón de cerrar del modal */
+/* ——— BOTÓN DE CIERRE DEL MODAL (cuando no se usa la "X") ——— */
 .close-button {
   padding: 8px 14px;
   border: none;
@@ -160,28 +176,30 @@
   background: #90a4ae;
 }
 
-/* ——— SweetAlert2 / Responsive ——— */
+/* ——— PERSONALIZACIÓN PARA EL POPUP DE SWEETALERT2 ——— */
 .custom-swal-popup.swal2-popup {
-  width: 70vw !important;
-  max-width: 90vw !important;
+  width: 62vw !important;
+  max-width: 62vw !important;
   transform: none !important;
   zoom: 1 !important;
   overflow-x: hidden !important;
 }
 
+/* ——— CONTENEDOR INTERNO DE HTML DEL POPUP ——— */
 .custom-swal-popup .swal2-html-container {
   padding: 0 !important;
   overflow-x: hidden !important;
 }
 
+/* ——— FORZAR ESTILO CENTRAL DEL MODAL DENTRO DE SWEETALERT ——— */
 .custom-swal-popup .month-summary-modal {
+  max-width: 60vw !important;
+  margin: 0 auto !important;
   width: 100% !important;
-  max-width: none !important;
+  padding: 1rem 1.5rem !important;
 }
 
-/* Añade o reemplaza esto al final de MonthSummary.css */
-
-/* Exportar Excel a la izquierda, paginación centrada, Cerrar a la derecha */
+/* ——— CONTROLES DEL MODAL DENTRO DE SWEETALERT ——— */
 .custom-swal-popup .month-summary-modal .modal-controls {
   display: flex !important;
   align-items: center !important;
@@ -190,48 +208,7 @@
   margin-top: 1rem !important;
 }
 
-
-.export-all-button {
-  margin-top: 1rem;
-  padding: 0.6rem 1.2rem;
-  background-color: #4caf50;
-  color: white;
-  font-weight: 600;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.export-all-button:hover {
-  background-color: #43a047;
-}
-
-
-.month-summary h4 {
-  font-size: 1.3rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  color: #1a237e;
-  border-bottom: 2px solid #e0e0e0;
-  padding-bottom: 0.5rem;
-}
-
-.month-summary p {
-  margin: 0.6rem 0;
-  font-size: 1rem;
-  line-height: 1.4;
-}
-
-.month-summary strong {
-  color: #0d47a1;
-}
-
-
-
-
-/* Estilos de la X de cierre */
+/* ——— BOTÓN "X" PARA CIERRE DEL MODAL EN LA ESQUINA ——— */
 .close-icon {
   position: absolute;
   top: 1rem;
@@ -244,24 +221,69 @@
   transition: color 0.2s ease;
   line-height: 1;
 }
+
 .close-icon:hover {
   color: #333;
 }
 
-
-/* ——— Paginación más compacta ——— */
+/* ——— AJUSTES FINOS A LOS BOTONES Y PAGINACIÓN DENTRO DEL MODAL ——— */
 .custom-swal-popup .month-summary-modal .modal-controls .pagination {
-  font-size: 0.75rem;      /* texto más pequeño */
-  gap: 0.25rem;            /* menos espacio entre elementos */
+  font-size: 0.75rem;
+  gap: 0.25rem;
 }
 
 .custom-swal-popup .month-summary-modal .modal-controls .pagination-button {
-  padding: 4px 8px;        /* botones más pequeños */
-  margin: 0;               /* sin márgenes extra */
-  font-size: 0.75rem;      /* texto de botón más pequeño */
+  padding: 4px 8px;
+  margin: 0;
+  font-size: 0.75rem;
 }
 
 .custom-swal-popup .month-summary-modal .modal-controls .pagination-info {
-  margin: 0 0.5rem;        /* un poco de separación */
-  font-size: 0.75rem;      /* texto de info más pequeño */
+  margin: 0 0.5rem;
+  font-size: 0.75rem;
+}
+
+
+/* ——— LISTA ESTÉTICA PARA MOSTRAR CAUSAS MULTILÍNEA ——— */
+.causa-list {
+  list-style-type: disc;
+  padding-left: 1.2rem;
+  margin: 0;
+}
+
+.causa-list li {
+  margin-bottom: 0.1rem;
+  line-height: 1.1;
+  font-size: 0.85rem;
+}
+
+
+
+
+/* ——— MEJORAS VISUALES DEL MODAL ——— */
+.month-summary-modal h3 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #1a237e;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #ddd;
+  padding-bottom: 0.5rem;
+}
+
+.month-summary-modal {
+  background-color: #fefefe;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.month-summary-modal table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.month-summary-modal th {
+  background-color: #e3f2fd;
+  color: #0d47a1;
+  font-weight: bold;
 }

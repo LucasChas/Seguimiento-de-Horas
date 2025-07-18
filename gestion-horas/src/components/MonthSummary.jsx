@@ -160,7 +160,16 @@ export default function MonthSummary({ workdays, selectedDate, holidays = [] }) 
               ${pageItems.map(r => `
                 <tr>
                   <td>${r.fecha}</td>
-                  <td style="white-space: pre-line">${r.causa}</td>
+                  <td>
+                    <ul class="causa-list">
+                      ${r.causa
+                        .split('\n')
+                        .filter(Boolean)
+                        .map(desc => `<li>${desc}</li>`)
+                        .join('')}
+                    </ul>
+                  </td>
+
                   <td>${r.horas}</td>
                 </tr>
               `).join('')}

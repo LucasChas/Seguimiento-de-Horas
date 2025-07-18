@@ -177,3 +177,26 @@
   box-sizing: border-box !important;
 }
 
+
+
+
+.swal-btn-blue {
+  background-color: #5b60f5 !important;
+  color: #fff !important;
+}
+.swal-btn-outline {
+  background-color: rgb(27, 218, 104) !important;
+  color: #fff !important;
+}
+.swal-btn-gray {
+  background-color: #e53935 !important;
+  color: #fff !important;
+}
+/* 🔹 Modal más angosto */
+.swal-compact-popup.swal2-popup {
+  width:40vw !important;
+  max-width: 90vw !important;
+  padding: 1.2rem 1.4rem !important;
+  font-size: 0.95rem !important;
+  box-sizing: border-box;
+}

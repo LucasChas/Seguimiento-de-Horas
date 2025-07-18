@@ -189,9 +189,22 @@ const handleSubmit = async () => {
   };
 
 return (
-  <div className="modal-overlay">
+  <div className="modal-overlay" onClick={(e) => {
+  if (e.target.classList.contains('modal-overlay')) {
+    if (hasChanges) onSaved();
+    onClose();
+  }}}>
     <div className="modal">
-      <button className="close-icon" onClick={onClose}>×</button>
+      <button
+              className="close-icon"
+              onClick={() => {
+                if (hasChanges) onSaved();
+                onClose();
+              }}
+            >
+              ×
+            </button>
+
 
       <h3>{capitalize(format(new Date(date + 'T12:00:00'), "EEEE d 'de' MMMM", { locale: es }))}</h3>
 

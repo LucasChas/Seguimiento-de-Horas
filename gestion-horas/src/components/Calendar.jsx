@@ -9,6 +9,7 @@ import { supabase } from '../supabase/client';
 import MonthSummary from './MonthSummary';
 import { Tooltip } from 'react-tooltip';
 import AddHolidayModal from './AddHolidayModal';
+import Swal from 'sweetalert2';
 
 export default function WorkCalendar() {
   const [holidays, setHolidays] = useState([]);
@@ -123,7 +124,7 @@ export default function WorkCalendar() {
       .eq('date', prevDate);
 
     if (error || !prevEntries || prevEntries.length === 0) {
-      alert(`No podés cargar el ${format(date, 'dd/MM')} porque el día anterior (${format(prevDateObj, 'dd/MM')}) no fue registrado.`);
+      Swal.fire('Atención', `No podés cargar el ${format(date, 'dd/MM')} porque el día anterior (${format(prevDateObj, 'dd/MM')}) no fue registrado.`, 'warning');
       return;
     }
 
@@ -133,11 +134,35 @@ export default function WorkCalendar() {
     if (totalWorked >= 8 || wasJustified) {
       setSelectedDate(selected);
     } else {
-      const remaining = 8 - totalWorked;
-      const continuar = window.confirm(
-        `El día anterior (${format(prevDateObj, 'dd/MM')}) tiene ${totalWorked}hs cargadas. ¿Querés completarlas o continuar con el nuevo día (${format(date, 'dd/MM')})?`
-      );
-      setSelectedDate(continuar ? prevDate : selected);
+const result = await Swal.fire({
+  title: '<h3 style="margin-bottom:0.5rem;">Carga incompleta detectada</h3>',
+  html: `
+    <div style="font-size: 0.90rem; margin-top: 0.3rem; line-height: 1.4;">
+      El día <strong>${format(prevDateObj, 'dd/MM')}</strong> tiene cargadas solo <strong>${totalWorked}hs</strong>.<br>
+      Para mantener la secuencia, primero debés completar ese día o podés continuar igual.
+    </div>
+  `,
+  icon: 'warning', // 🔔 Este es el cambio
+  showDenyButton: true,
+  showCancelButton: true,
+  confirmButtonText: `Completar ${format(prevDateObj, 'dd/MM')}`,
+  denyButtonText: `Continuar con ${format(date, 'dd/MM')}`,
+  cancelButtonText: '❌ Salir',
+  customClass: {
+    popup: 'swal-compact-popup',
+    confirmButton: 'swal-btn-blue',
+    denyButton: 'swal-btn-outline',
+    cancelButton: 'swal-btn-gray'
+  }
+});
+
+
+
+      if (result.isConfirmed) {
+        setSelectedDate(prevDate);
+      } else if (result.isDenied) {
+        setSelectedDate(selected);
+      }
     }
   };
 
