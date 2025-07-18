@@ -28,11 +28,15 @@ export default function WorkCalendar() {
   const holidayMap = new Map(holidays.map(h => [h.date, h.motivo]));
   const holidayDates = holidays.map(h => h.date);
 
-  const fetchWorkdays = async () => {
+    const fetchWorkdays = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
     const { data, error } = await supabase
       .from('workdays')
-      .select('date, hours_worked, status, description');
-    if (!error && data) setWorkdays(data);
+      .select('*')
+      .eq('user_id', user.id);
+
+    if (error) console.error(error);
+    else setWorkdays(data);
   };
 
   const tileDisabled = ({ date, view }) => {
@@ -83,12 +87,14 @@ export default function WorkCalendar() {
 
   const handleAddHolidayConfirm = async ({ date, motivo }) => {
     const [year, month, day] = date.split('-').map(Number);
+    const { data: { user } } = await supabase.auth.getUser();
     const { error } = await supabase.from('holidays').insert({
       dia: day,
       mes: month,
       motivo,
       tipo: 'personalizado',
-      custom: true
+      custom: true,
+      user_id : user.id
     });
 
     setShowAddModal(false);

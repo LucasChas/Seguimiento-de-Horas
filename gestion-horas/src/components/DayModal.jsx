@@ -36,13 +36,15 @@ export default function DayModal({ date, onClose, onSaved }) {
     setHasChanges(huboCambios);
   }, [isExternal, selectedCauseId, customCause, isFullDay, hoursWorked, description, wantsExtraHours, extraHours, extraDescription]);
 
-  const fetchEntries = async () => {
-    const { data } = await supabase.from('workdays').select('*').eq('date', date);
+    const fetchEntries = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data } = await supabase.from('workdays').select('*').eq('date', date).eq('user_id', user.id);
     if (data) setExistingEntries(data);
   };
 
   const fetchCauses = async () => {
-    const { data } = await supabase.from('absence_reasons').select('*');
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data } = await supabase.from('absence_reasons').select('*').eq('user_id', user.id);
     if (data) setExternalCauses(data);
   };
 
@@ -75,12 +77,35 @@ const handleSubmit = async () => {
   let causeName = '';
   let fullDayFlag = false;
 
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return Swal.fire('Error', 'No se pudo obtener el usuario.', 'error');
+
+  const user_id = user.id;
+
   if (isExternal) {
     if (!selectedCauseId) {
       return Swal.fire('Error', 'Seleccioná una causa.', 'error');
     }
     if (selectedCauseId === 'otra' && !customCause.trim()) {
       return Swal.fire('Error', 'Ingresá una causa personalizada.', 'error');
+    }
+
+    // 👉 Insertar nueva causa si es personalizada
+    if (selectedCauseId === 'otra') {
+      const { error: insertError } = await supabase
+        .from('absence_reasons')
+        .insert({
+          name: customCause.trim(),
+          full_day: isFullDay,
+          user_id
+        });
+
+      if (insertError) {
+        return Swal.fire('Error', 'No se pudo guardar la nueva causa.', 'error');
+      }
+
+      // 🔄 Actualizamos lista de causas
+      await fetchCauses();
     }
 
     causeName = selectedCauseId === 'otra'
@@ -95,23 +120,29 @@ const handleSubmit = async () => {
       if (existingEntries.length > 0) {
         return Swal.fire('Error', 'No se puede cargar una causa de día completo porque ya existen registros.', 'error');
       }
+
       const { error } = await supabase
         .from('workdays')
-        .insert({ date, hours_worked: 0, status: 'externo', description: `${causeName} JornadaCompleta` });
+        .insert({ date, hours_worked: 0, status: 'externo', description: `${causeName} JornadaCompleta`, user_id });
+
       if (error) {
         return Swal.fire('Error', 'No se pudo guardar la ausencia.', 'error');
       }
+
       return onSaved(), onClose();
     } else {
       if (!horas || isNaN(horas) || horas <= 0 || horas > remaining) {
         return Swal.fire('Error', 'Ingresá una cantidad válida de horas.', 'error');
       }
+
       const { error } = await supabase
         .from('workdays')
-        .insert({ date, hours_worked: horas, status: 'externo', description: causeName });
+        .insert({ date, hours_worked: horas, status: 'externo', description: causeName, user_id });
+
       if (error) {
         return Swal.fire('Error', 'No se pudo guardar la ausencia.', 'error');
       }
+
       return onSaved(), onClose();
     }
   }
@@ -127,7 +158,7 @@ const handleSubmit = async () => {
 
     const { error: workError } = await supabase
       .from('workdays')
-      .insert({ date, hours_worked: horas, status: 'trabajado', description });
+      .insert({ date, hours_worked: horas, status: 'trabajado', description, user_id });
 
     if (workError) {
       return Swal.fire('Error', 'No se pudo guardar las horas.', 'error');
@@ -144,7 +175,7 @@ const handleSubmit = async () => {
 
     const { error: extraError } = await supabase
       .from('workdays')
-      .insert({ date, hours_worked: extras, status: 'extra', description: extraDescription });
+      .insert({ date, hours_worked: extras, status: 'extra', description: extraDescription, user_id });
 
     if (extraError) {
       return Swal.fire('Error', 'No se pudo guardar las horas extra.', 'error');
@@ -154,6 +185,7 @@ const handleSubmit = async () => {
   onSaved();
   onClose();
 };
+
 
   const handleDelete = async (entry) => {
     const result = await Swal.fire({
@@ -165,7 +197,12 @@ const handleSubmit = async () => {
       cancelButtonText: 'Cancelar'
     });
     if (result.isConfirmed) {
-      const { error } = await supabase.from('workdays').delete().eq('id', entry.id);
+      const { data: { user } } = await supabase.auth.getUser();
+      const { error } = await supabase
+      .from('workdays')
+      .delete()
+      .eq('id', entry.id)
+      .eq('user_id',user.id);
       if (!error) {
         await fetchEntries();
         setHasChanges(true);
@@ -174,11 +211,14 @@ const handleSubmit = async () => {
   };
 
   const capitalize = (text) => text.charAt(0).toUpperCase() + text.slice(1);
-  const shouldShowHoursField = () => {
-    if (selectedCauseId === 'otra') return !isFullDay;
-    const selected = externalCauses.find(c => String(c.id) === selectedCauseId);
-    return selected?.full_day === false;
-  };
+const shouldShowHoursField = () => {
+  if (selectedCauseId === 'otra') {
+    return !isFullDay;
+  }
+  const selectedCause = externalCauses.find(c => String(c.id) === selectedCauseId);
+  return selectedCause ? !selectedCause.full_day : false;
+};
+
   const formatHoras = (hs) => {
     const totalMinutes = Math.round(hs * 60);
     const horas = Math.floor(totalMinutes / 60);
