@@ -47,7 +47,7 @@ export default function App() {
       <Sidebar onNavigate={handleNavigate} />
       <div style={{ flex: 1, padding: '2rem' }}>
         {view === 'calendar' && <WorkCalendar />}
-        {view === 'summary' && <MonthSummary selectedDate={new Date()} workdays={[]} />}
+        {view === 'summary' && <p>🧑 Aquí irá la pantalla de Estadisticas (próximamente).</p>}
         {view === 'profile' && <p>🧑 Aquí irá la pantalla de perfil (próximamente).</p>}
       </div>
     </div>
