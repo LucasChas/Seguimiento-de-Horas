@@ -43,10 +43,41 @@ export default function DayModal({ date, onClose, onSaved }) {
   };
 
   const fetchCauses = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    const { data } = await supabase.from('absence_reasons').select('*').eq('user_id', user.id);
-    if (data) setExternalCauses(data);
-  };
+    // 1) Obtener usuario
+    const {
+      data: { user },
+      error: authErr
+    } = await supabase.auth.getUser()
+    if (authErr || !user) {
+      console.error('No se pudo obtener el usuario:', authErr)
+      return
+    }
+    const userId = user.id
+
+    // 2) Traer causas globales (user_id IS NULL)
+    const { data: globalCauses, error: errGlobal } = await supabase
+      .from('absence_reasons')
+      .select('*')
+      .is('user_id', null)
+    if (errGlobal) console.error('Error al traer globales:', errGlobal)
+
+    // 3) Traer causas del usuario (user_id = userId)
+    const { data: personalCauses, error: errPersonal } = await supabase
+      .from('absence_reasons')
+      .select('*')
+      .eq('user_id', userId)
+    if (errPersonal) console.error('Error al traer personales:', errPersonal)
+
+    // 4) Combinar ambos arrays y actualizar estado
+    setExternalCauses([
+      ...(globalCauses || []),
+      ...(personalCauses || []),
+    ])
+  }
+
+  useEffect(() => {
+    fetchCauses()
+  }, [])
 
   const parseTimeInput = (input) => {
     const regex = /(?:(\d+(?:[.,]\d+)?)h)?\s*(?:(\d+)\s*m)?/i;
@@ -280,6 +311,7 @@ return (
         {!hasFullDayAbsence && totalWorkedOrAbsent < 8 && (
           <label>
             <input
+              
               type="checkbox"
               checked={isExternal}
               onChange={() => setIsExternal(!isExternal)}

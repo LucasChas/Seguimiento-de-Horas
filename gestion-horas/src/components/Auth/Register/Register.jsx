@@ -16,15 +16,16 @@ export default function Register({ switchToLogin }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [passwordTouched, setPasswordTouched] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const validarContraseña = (pass) =>
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+{}\[\]:;<>,.?~\\/-]).{8,}$/.test(pass);
+  const validarContraseña = pass =>
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+{}\[\]:;<>,.?~\\\/-]).{8,}$/.test(pass);
 
-  const validarTelefono = (tel) => /^\d{8,15}$/.test(tel.replace(/\D/g, ''));
+  const validarTelefono = tel => /^\d{8,15}$/.test(tel.replace(/\D/g, ''));
 
-  const validarNombre = (text) => /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(text);
+  const validarNombre = text => /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(text);
 
-  const validarEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const validarEmail = correo => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
 
   const lanzarAlerta = (titulo, texto, icono = 'warning') => {
     Swal.fire({
@@ -35,59 +36,70 @@ export default function Register({ switchToLogin }) {
     });
   };
 
-  const handleRegister = async (e) => {
+  const handleRegister = async e => {
     e.preventDefault();
 
+    // Validaciones de campos
     if (!nombre || !apellido || !telefono || !email || !password || !confirmar) {
       return lanzarAlerta('Campos incompletos', 'Todos los campos son obligatorios.');
     }
-
     if (!validarNombre(nombre)) {
       return lanzarAlerta('Nombre inválido', 'Solo se permiten letras y espacios.');
     }
-
     if (!validarNombre(apellido)) {
       return lanzarAlerta('Apellido inválido', 'Solo se permiten letras y espacios.');
     }
-
     if (!validarTelefono(telefono)) {
       return lanzarAlerta('Teléfono inválido', 'Debe contener entre 8 y 15 números.');
     }
-
     if (!validarEmail(email)) {
       return lanzarAlerta('Correo inválido', 'Ingresá un correo electrónico válido.');
     }
-
     if (password !== confirmar) {
       return lanzarAlerta('Contraseñas distintas', 'Ambas contraseñas deben coincidir.');
     }
-
     if (!validarContraseña(password)) {
       return lanzarAlerta('Contraseña insegura', 'Debe cumplir con todos los requisitos.');
     }
 
+    setLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
+      // 1) Registro en Auth
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: { nombre, apellido, telefono },
-          emailRedirectTo: `${window.location.origin}`,
-        },
+          data: { display_name: `${nombre.trim()} ${apellido.trim()}` },
+          emailRedirectTo: window.location.origin
+        }
       });
+      if (signUpError) throw signUpError;
 
-      if (error) throw error;
+      // 2) Guardar perfil en tabla "profiles"
+      const userId = signUpData.user.id;
+      const cleanPhone = telefono.replace(/\D/g, '');
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          nombre: nombre.trim(),
+          apellido: apellido.trim(),
+          telefono: cleanPhone || null
+        });
+      if (profileError) throw profileError;
 
+      // Éxito
       Swal.fire({
         title: 'Registro exitoso',
         text: 'Revisá tu correo para verificar la cuenta.',
         icon: 'success',
         confirmButtonColor: '#1a237e'
-      });
-
-      switchToLogin();
+      }).then(() => switchToLogin());
     } catch (err) {
+      console.error(err);
       lanzarAlerta('Error', err.message, 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -100,28 +112,21 @@ export default function Register({ switchToLogin }) {
           type="text"
           placeholder="Nombre"
           value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
+          onChange={e => setNombre(e.target.value)}
         />
 
         <input
           type="text"
           placeholder="Apellido"
           value={apellido}
-          onChange={(e) => setApellido(e.target.value)}
+          onChange={e => setApellido(e.target.value)}
         />
 
         <PhoneInput
           country={'ar'}
           value={telefono}
-          onChange={(value) => setTelefono(value)}
-          inputStyle={{
-            width: '100%',
-            height: '2.8rem',
-            borderRadius: '10px',
-            border: '1px solid #ccc',
-            paddingLeft: '3.5rem',
-            fontSize: '1rem'
-          }}
+          onChange={setTelefono}
+          inputStyle={{ width: '100%', height: '2.8rem', borderRadius: '10px', border: '1px solid #ccc', paddingLeft: '3.5rem', fontSize: '1rem' }}
           containerStyle={{ marginBottom: '1rem' }}
           placeholder="Teléfono"
         />
@@ -130,7 +135,7 @@ export default function Register({ switchToLogin }) {
           type="email"
           placeholder="Correo electrónico"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={e => setEmail(e.target.value)}
         />
 
         <div className="password-container">
@@ -138,7 +143,7 @@ export default function Register({ switchToLogin }) {
             type={showPassword ? 'text' : 'password'}
             placeholder="Contraseña"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={e => setPassword(e.target.value)}
             onFocus={() => setPasswordTouched(true)}
           />
           <span className="toggle-password" onClick={() => setShowPassword(!showPassword)}>
@@ -173,14 +178,16 @@ export default function Register({ switchToLogin }) {
             type={showConfirm ? 'text' : 'password'}
             placeholder="Confirmar contraseña"
             value={confirmar}
-            onChange={(e) => setConfirmar(e.target.value)}
+            onChange={e => setConfirmar(e.target.value)}
           />
           <span className="toggle-password" onClick={() => setShowConfirm(!showConfirm)}>
             {showConfirm ? '🙈' : '👁️'}
           </span>
         </div>
 
-        <button type="submit">Registrarme</button>
+        <button type="submit" disabled={loading}>
+          {loading ? 'Registrando...' : 'Registrarme'}
+        </button>
 
         <p className="auth-toggle">
           ¿Ya tenés cuenta? <span onClick={switchToLogin}>Iniciá sesión</span>

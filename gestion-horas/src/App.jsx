@@ -4,7 +4,7 @@ import Login from './components/Auth/Login/Login';
 import Register from './components/Auth/Register/Register';
 import WorkCalendar from './components/Calendar/Calendar';
 import Sidebar from './components/Sidebar/Sidebar';
-
+import Profile from './components/Profile/Profile';
 export default function App() {
   const [session, setSession] = useState(null);
   const [isRegistering, setIsRegistering] = useState(false);
@@ -48,7 +48,7 @@ export default function App() {
       <div style={{ flex: 1, padding: '2rem' }}>
         {view === 'calendar' && <WorkCalendar />}
         {view === 'summary' && <p>🧑 Aquí irá la pantalla de Estadisticas (próximamente).</p>}
-        {view === 'profile' && <p>🧑 Aquí irá la pantalla de perfil (próximamente).</p>}
+        {view === 'profile' && <Profile />}
       </div>
     </div>
   );

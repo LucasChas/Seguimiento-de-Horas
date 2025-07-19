@@ -14,13 +14,19 @@
 
 .modal {
   position: relative;
-  padding: 2em;
   background-color: white;
   border-radius: 1em;
-  max-width: 90vw;
-  margin: auto;
-}
 
+  /* Ajustes nuevos: tamaño, máximo alto y scroll interno */
+  width: 600px;
+  max-width: 90vw;
+  max-height: 90vh;
+  padding: 1.5rem;
+  overflow-y: auto;
+
+  margin: auto;
+  animation: fadeIn 0.2s ease-out;
+}
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-10px); }
@@ -109,7 +115,7 @@
 
 input[type="text"],
 input[type="number"] {
-  width: 100%;
+  width: 97%;
   padding: 0.55rem;
   font-size: 1rem;
   margin-top: 0.35rem;
@@ -221,7 +227,7 @@ select:focus {
 }
 
 .fixed-footer {
-  position: sticky;
+  position: relative;
   bottom: 0;
   background-color: white;
   padding-top: 1rem;

@@ -1,0 +1,85 @@
+/* src/components/Profile/Profile.css */
+.profile {
+  max-width: 800px;
+  margin: 0 auto;
+  font-family: sans-serif;
+}
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.avatar-wrapper {
+  position: relative;
+}
+.avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.avatar-input {
+  position: absolute;
+  bottom: 0; right: 0;
+  opacity: 0;
+  width: 100%; height: 100%;
+  cursor: pointer;
+}
+.profile-tabs {
+  display: flex;
+  border-bottom: 1px solid #ccc;
+  margin-bottom: 1rem;
+}
+.profile-tabs button {
+  flex: 1;
+  padding: 0.75rem;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+}
+.profile-tabs button.active {
+  border-color: #6c63ff;
+  font-weight: bold;
+}
+.profile-content label {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+.profile-content input[type="text"],
+.profile-content input[type="email"],
+.profile-content input[type="date"],
+.profile-content input[type="password"] {
+  width: 100%;
+  padding: 0.5rem;
+  margin-top: 0.25rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.profile-content button {
+  padding: 0.5rem 1rem;
+  background: #6c63ff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 1rem;
+}
+.item-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+.item-row input[type="text"],
+.item-row input[type="date"] {
+  flex: 1;
+}
+.invite {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
