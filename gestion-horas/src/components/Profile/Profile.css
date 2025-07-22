@@ -1,36 +1,43 @@
-/* src/components/Profile/Profile.css */
 .profile {
   max-width: 800px;
   margin: 0 auto;
-  font-family: sans-serif;
+  font-family: 'Segoe UI', sans-serif;
 }
+
 .profile-header {
   display: flex;
   align-items: center;
   gap: 1rem;
   margin-bottom: 1rem;
 }
+
 .avatar-wrapper {
   position: relative;
 }
+
 .avatar {
-  width: 80px;
-  height: 80px;
+  width: 90px;
+  height: 90px;
   border-radius: 50%;
   object-fit: cover;
 }
+
 .avatar-input {
   position: absolute;
-  bottom: 0; right: 0;
+  bottom: 0;
+  right: 0;
   opacity: 0;
-  width: 100%; height: 100%;
+  width: 100%;
+  height: 100%;
   cursor: pointer;
 }
+
 .profile-tabs {
   display: flex;
   border-bottom: 1px solid #ccc;
   margin-bottom: 1rem;
 }
+
 .profile-tabs button {
   flex: 1;
   padding: 0.75rem;
@@ -39,18 +46,19 @@
   border-bottom: 3px solid transparent;
   cursor: pointer;
 }
+
 .profile-tabs button.active {
   border-color: #6c63ff;
   font-weight: bold;
+  color: #6c63ff;
 }
+
 .profile-content label {
   display: block;
   margin-bottom: 0.5rem;
 }
-.profile-content input[type="text"],
-.profile-content input[type="email"],
-.profile-content input[type="date"],
-.profile-content input[type="password"] {
+
+.profile-content input {
   width: 100%;
   padding: 0.5rem;
   margin-top: 0.25rem;
@@ -58,28 +66,303 @@
   border: 1px solid #ccc;
   border-radius: 4px;
 }
+
 .profile-content button {
   padding: 0.5rem 1rem;
   background: #6c63ff;
-  color: #fff;
+  color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   margin-bottom: 1rem;
 }
+
 .item-row {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.75rem;
 }
-.item-row input[type="text"],
-.item-row input[type="date"] {
-  flex: 1;
-}
+
 .invite {
   display: flex;
   gap: 0.5rem;
   align-items: center;
   margin-bottom: 1rem;
+}
+
+/*PROFILE INFO*/
+
+
+.profile-card {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+  padding: 2rem;
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.avatar-wrapper {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 4px solid #1976d2;
+}
+
+.avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.info-fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.field-row {
+  display: flex;
+  flex-direction: column;
+}
+
+.field-row.small {
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.input-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.input-with-icon input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.edit-icon {
+  cursor: pointer;
+  color: #1976d2;
+}
+
+.save-btn {
+  margin-top: 1rem;
+  padding: 0.5rem 1rem;
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.invite {
+  background: #f5faff;
+  border-radius: 12px;
+  padding: 1rem 2rem;
+  box-shadow: inset 0 0 4px #cfe8fc;
+}
+
+.invite input {
+  padding: 0.5rem;
+  border: 1px solid #1976d2;
+  border-radius: 8px;
+  margin-right: 1rem;
+  width: 250px;
+}
+
+.invite-btn {
+  background: #1976d2;
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+
+
+
+/* para las fotos de perfil... */
+.reactEasyCrop_Container {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  background: #333;
+}
+
+/* Avatar dentro de profile-info */
+.profile-card {
+  display: flex;
+  align-items: flex-start;
+  background: #fff;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  gap: 2rem;
+}
+
+.avatar-side {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 4px solid #1976d2;
+  position: relative;
+  cursor: pointer;
+}
+
+.avatar-side img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-overlay {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  text-align: center;
+  background: rgba(25, 118, 210, 0.7);
+  color: white;
+  font-size: 0.75rem;
+  padding: 4px 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.avatar-side:hover .avatar-overlay {
+  opacity: 1;
+}
+
+.divider {
+  width: 2px;
+  background: #eee;
+  height: auto;
+  align-self: stretch;
+}
+
+.info-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.meta-info p {
+  margin: 0.2rem 0;
+  font-size: 0.9rem;
+  color: #555;
+}
+.input-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.input-with-icon input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+
+/*ESTILOS DE LOS FERIADOS.*/
+
+
+/* Estilo general de tabla de feriados */
+.profile-table {
+  width: 80%;
+  margin: 1.5rem auto;
+  border-collapse: collapse;
+  font-size: 1rem;
+  border: 1px solid #ddd;
+  background-color: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+}
+
+/* Encabezado */
+.profile-table thead {
+  background-color: #f5f5f5;
+}
+
+.profile-table th {
+  text-align: left;
+  padding: 0.8rem 1.2rem;
+  font-weight: 600;
+  border-bottom: 1px solid #ddd;
+  color: #333;
+}
+
+/* Cuerpo */
+.profile-table td {
+  padding: 0.75rem 1.2rem;
+  border-bottom: 1px solid #eee;
+  color: #222;
+}
+
+.profile-table tr:hover {
+  background-color: #fafafa;
+}
+
+/* Botones de acción */
+.acciones {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-btn {
+  background: #f0f0f0;
+  border: none;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-btn:hover {
+  background: #dedede;
+}
+
+.action-btn.delete {
+  background: #ffcdd2;
+}
+
+.action-btn.delete:hover {
+  background: #ef9a9a;
+}
+
+/* Botón nuevo feriado */
+.add-button {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background-color: #1976d2;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  margin: 1.5rem auto;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.add-button:hover {
+  background-color: #125aab;
 }

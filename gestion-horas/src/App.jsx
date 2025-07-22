@@ -5,6 +5,7 @@ import Register from './components/Auth/Register/Register';
 import WorkCalendar from './components/Calendar/Calendar';
 import Sidebar from './components/Sidebar/Sidebar';
 import Profile from './components/Profile/Profile';
+
 export default function App() {
   const [session, setSession] = useState(null);
   const [isRegistering, setIsRegistering] = useState(false);

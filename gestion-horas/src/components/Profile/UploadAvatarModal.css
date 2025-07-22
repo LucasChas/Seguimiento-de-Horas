@@ -1,0 +1,67 @@
+.avatar-upload-modal input[type="file"] {
+  margin: 1rem 0;
+}
+
+.dimension-inputs {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.dimension-inputs input {
+  width: 70px;
+  padding: 0.3rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+
+.slider-wrapper {
+  margin-top: 1rem;
+}
+
+.zoom-slider {
+  width: 100%;
+  margin-top: 0.5rem;
+  accent-color: #1976d2; /* azul moderno */
+}
+
+
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 0.25rem;
+  margin-top: 1rem;
+}
+
+.avatar-option {
+  width: 5rem;
+  height: 5rem;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.2s ease, border 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.avatar-option:hover {
+  transform: scale(1.05);
+  border-color: #1976d2;
+}
+
+
+.divider {
+  border: none;
+  border-top: 1px solid #ccc;
+  margin: 1rem 0;
+}
+
+.avatar-scroll {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}

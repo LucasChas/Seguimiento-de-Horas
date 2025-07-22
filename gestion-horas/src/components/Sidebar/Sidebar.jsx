@@ -1,4 +1,3 @@
-// Sidebar.jsx
 import React, { useState } from 'react';
 import './Sidebar.css';
 import logo from '../../assets/logo.jpg';
@@ -22,10 +21,30 @@ export default function Sidebar({ onNavigate }) {
     setShowAddHoliday(false);
   };
 
-  const handleSubmitHoliday = ({ date, motivo }) => {
-    // Aquí envías date y motivo a tu lógica (Supabase, estado global, etc.)
-    console.log('Nuevo feriado:', date, motivo);
-    setShowAddHoliday(false);
+  const handleSubmitHoliday = async ({ date, motivo }) => {
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw new Error('No se pudo obtener el usuario.');
+
+      const fecha = new Date(date);
+      const dia = fecha.getUTCDate();
+      const mes = fecha.getUTCMonth() + 1;
+
+      const { error: insertError } = await supabase.from('holidays').insert({
+        dia,
+        mes,
+        motivo,
+        tipo: 'Personalizado',
+        custom: true,
+        user_id: user.id
+      });
+
+      if (insertError) throw insertError;
+
+      setShowAddHoliday(false);
+    } catch (error) {
+      console.error('Error al agregar feriado:', error.message);
+    }
   };
 
   return (
@@ -34,10 +53,7 @@ export default function Sidebar({ onNavigate }) {
         <div className="logo-placeholder">
           <img src={logo} alt="TimeTrack Solutions" />
         </div>
-        <button
-          className="toggle-btn"
-          onClick={() => setIsOpen(prev => !prev)}
-        >
+        <button className="toggle-btn" onClick={() => setIsOpen(prev => !prev)}>
           {isOpen ? '«' : '»'}
         </button>
       </div>
@@ -52,40 +68,27 @@ export default function Sidebar({ onNavigate }) {
         <button onClick={() => onNavigate('summary')}>
           📊 {isOpen && <span>Estadísticas</span>}
         </button>
-        {/* ——— Botón Agregar Feriado ——— */}
-        <button
-          
-          onClick={handleAddCustomHoliday}
-        >
+
+        {/* Botón Agregar Feriado */}
+        <button onClick={handleAddCustomHoliday}>
           ➕ {isOpen && <span>Agregar Feriado</span>}
         </button>
-          <hr className="separator" />
-        
-        
+
+        <hr className="separator" />
       </nav>
 
-      
-
-         
-
-      {/* ——— Modal de Feriado ——— */}
       {showAddHoliday && (
         <AddHolidayModal
           onClose={handleCloseModal}
           onSubmit={handleSubmitHoliday}
         />
-
-        
       )}
 
-      <div className='sidebar-footer'> 
-          
-          <button onClick={handleLogout}>
-            🔓 {isOpen && <span>Cerrar sesión</span>}
-                </button>
-                
-        </div>
-      
+      <div className="sidebar-footer">
+        <button onClick={handleLogout}>
+          🔓 {isOpen && <span>Cerrar sesión</span>}
+        </button>
+      </div>
     </div>
   );
 }
