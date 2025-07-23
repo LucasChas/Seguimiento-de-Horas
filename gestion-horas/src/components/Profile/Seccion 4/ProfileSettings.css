@@ -1,9 +1,9 @@
+
 .settings-section {
-  padding: 1rem;
   display: flex;
   justify-content: center;
-  background-color: #f9f9f9;
   min-height: calc(100vh - 64px);
+  padding: 2rem 1rem;
   box-sizing: border-box;
 }
 
@@ -11,28 +11,37 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   grid-template-areas:
-    "email password"
-    "noti delete";
-  gap: 1.5rem;
-  width: 100%;
-  max-width: 1100px;
-}
-
-.settings-card {
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
+    "password noti"
+    "email noti"
+    "delete noti";
   gap: 1rem;
-  border: 1px solid #ddd;
+  width: 100%;
+  max-width: 90rem;
+  align-items: end;
 }
 
+/* Áreas de grilla */
 .settings-card.email { grid-area: email; }
 .settings-card.password { grid-area: password; }
 .settings-card.noti { grid-area: noti; }
 .settings-card.delete { grid-area: delete; }
+
+
+
+.settings-card {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.07);
+  padding: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+.settings-card:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
 
 .settings-row {
   display: flex;
@@ -42,9 +51,10 @@
 
 .settings-row input {
   flex: 1;
-  padding: 0.5rem;
-  border-radius: 6px;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
   border: 1px solid #ccc;
+  font-size: 0.95rem;
 }
 
 .settings-field {
@@ -54,22 +64,26 @@
 }
 
 .settings-btn {
-  background-color: #1976d2;
+  background: linear-gradient(135deg, #1e88e5, #1565c0);
   color: white;
   border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
+  font-size: 0.9rem;
+  transition: background 0.2s ease-in-out, transform 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .settings-btn:hover {
-  background-color: #125aa3;
+  background: #125aa3;
+  transform: translateY(-1px);
 }
 
 .settings-btn.danger {
   background-color: #d32f2f;
-  width: 100%;
+  width: auto;
 }
 
 .settings-btn.danger:hover {
@@ -79,8 +93,53 @@
 .settings-note {
   font-size: 0.9rem;
   color: #666;
+  line-height: 1.4;
 }
 
+/* Notificaciones */
+.settings-card.noti {
+  overflow: hidden;
+  position: relative;
+  
+
+}
+
+.settings-card.noti .noti-visible {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  padding-top: 0.5rem;
+}
+
+.settings-card.noti .settings-row {
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 1.5rem;
+}
+
+.settings-card.noti select,
+.settings-card.noti input[type="time"] {
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 0.95rem;
+}
+
+.settings-inline {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.95rem;
+  color: #333;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.settings-inline span {
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+/* Responsive */
 @media (max-width: 900px) {
   .settings-grid {
     grid-template-columns: 1fr;
@@ -98,5 +157,13 @@
 
   .settings-btn {
     width: 100%;
+  }
+
+  .settings-card {
+    max-height: unset;
+  }
+
+  .settings-card.noti .noti-visible {
+    overflow-y: visible;
   }
 }
