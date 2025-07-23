@@ -84,7 +84,8 @@ export default function Register({ switchToLogin }) {
           id: userId,
           nombre: nombre.trim(),
           apellido: apellido.trim(),
-          telefono: cleanPhone || null
+          telefono: cleanPhone || null,
+          email: email.trim()
         });
       if (profileError) throw profileError;
 

@@ -173,3 +173,12 @@
     overflow-y: visible;
   }
 }
+
+
+
+
+/* Asegura que los inputs de SweetAlert2 no se salgan del modal */
+.swal2-popup input.swal2-input {
+  max-width: 90%;
+  box-sizing: border-box;
+}

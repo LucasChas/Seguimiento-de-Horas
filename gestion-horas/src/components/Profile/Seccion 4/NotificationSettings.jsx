@@ -109,7 +109,6 @@ export default function NotificationSettings({ userId }) {
             >
               <option value="email">Solo Email</option>
               <option value="whatsapp">Solo WhatsApp</option>
-              <option value="ambos">Ambos</option>
             </select>
           </div>
 

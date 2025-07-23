@@ -4,74 +4,110 @@ import Swal from 'sweetalert2';
 import { supabase } from '../../../supabase/client';
 import './ProfileSettings.css';
 import NotificationSettings from './NotificationSettings';
+
 export default function ProfileSettings({ email }) {
-  const [notifyEnabled, setNotifyEnabled] = useState(true);
-  const [notifyMethod, setNotifyMethod] = useState('email');
-  const [notifyTime, setNotifyTime] = useState('09:00');
   const [userId, setUserId] = useState(null);
-  
+
   useEffect(() => {
     const getUser = async () => {
       const { data, error } = await supabase.auth.getUser();
-      if (data?.user) {
-        setUserId(data.user.id);
-      }
+      if (data?.user) setUserId(data.user.id);
     };
     getUser();
   }, []);
-  
-  
+
+  const addPasswordToggle = (iconId, inputId) => {
+    document.getElementById(iconId)?.addEventListener('click', () => {
+      const input = document.getElementById(inputId);
+      if (input) {
+        input.type = input.type === 'password' ? 'text' : 'password';
+        document.getElementById(iconId).classList.toggle('fa-eye-slash');
+      }
+    });
+  };
+
   async function handleChangeEmail() {
-    const { value: currentPassword } = await Swal.fire({
+    await Swal.fire({
       title: 'Confirmá tu contraseña',
-      input: 'password',
-      inputLabel: 'Contraseña actual',
+      html: `
+        <div style="position:relative;">
+          <input id="swal-pass-confirm" class="swal2-input" placeholder="Contraseña actual" type="password" />
+          <i class="fa fa-eye" id="toggle-confirm" style="position:absolute; top:12px; right:15px; cursor:pointer;"></i>
+        </div>
+      `,
+      didOpen: () => addPasswordToggle('toggle-confirm', 'swal-pass-confirm'),
       showCancelButton: true,
-      confirmButtonText: 'Validar'
+      preConfirm: () => {
+        const pwd = document.getElementById('swal-pass-confirm').value;
+        if (!pwd) return Swal.showValidationMessage('La contraseña es obligatoria');
+        return pwd;
+      }
+    }).then(async ({ value: currentPassword }) => {
+      if (!currentPassword) return;
+
+      const { data: session, error } = await supabase.auth.signInWithPassword({ email, password: currentPassword });
+      if (error || !session.user) return Swal.fire('Error', 'Contraseña incorrecta', 'error');
+
+      const { value: newEmail } = await Swal.fire({
+        title: 'Nuevo correo electrónico',
+        input: 'email',
+        inputValue: email,
+        showCancelButton: true,
+        confirmButtonText: 'Actualizar'
+      });
+
+      if (!newEmail) return;
+      const { error: updateErr } = await supabase.auth.updateUser({ email: newEmail });
+      if (updateErr) return Swal.fire('Error', updateErr.message, 'error');
+
+      Swal.fire('Listo', 'Te enviamos un correo de confirmación', 'success');
     });
-    if (!currentPassword) return;
-
-    const { data: session, error: loginError } = await supabase.auth.signInWithPassword({ email, password: currentPassword });
-    if (loginError || !session.user) return Swal.fire('Error', 'Contraseña incorrecta', 'error');
-
-    const { value: newEmail } = await Swal.fire({
-      title: 'Nuevo correo electrónico',
-      input: 'email',
-      inputValue: email,
-      showCancelButton: true,
-      confirmButtonText: 'Actualizar'
-    });
-    if (!newEmail) return;
-
-    const { error } = await supabase.auth.updateUser({ email: newEmail });
-    if (error) return Swal.fire('Error', error.message, 'error');
-    Swal.fire('Listo', 'Te enviamos un correo de confirmación', 'success');
   }
 
   async function handleChangePassword() {
     const { value: currentPassword } = await Swal.fire({
       title: 'Contraseña actual',
-      input: 'password',
+      html: `
+        <div style="position:relative;">
+          <input id="swal-current-pass" class="swal2-input" placeholder="Contraseña actual" type="password" />
+          <i class="fa fa-eye" id="toggle-current" style="position:absolute; top:12px; right:15px; cursor:pointer;"></i>
+        </div>
+      `,
+      didOpen: () => addPasswordToggle('toggle-current', 'swal-current-pass'),
       showCancelButton: true,
-      confirmButtonText: 'Validar'
+      preConfirm: () => {
+        const pwd = document.getElementById('swal-current-pass').value;
+        if (!pwd) return Swal.showValidationMessage('La contraseña es obligatoria');
+        return pwd;
+      }
     });
-    if (!currentPassword) return;
 
-    const { data: session, error: authError } = await supabase.auth.signInWithPassword({ email, password: currentPassword });
-    if (authError || !session.user) return Swal.fire('Error', 'Contraseña incorrecta', 'error');
+    if (!currentPassword) return;
+    const { data: session, error } = await supabase.auth.signInWithPassword({ email, password: currentPassword });
+    if (error || !session.user) return Swal.fire('Error', 'Contraseña incorrecta', 'error');
 
     const { value: formValues } = await Swal.fire({
       title: 'Nueva contraseña',
       html: `
-        <input id="swal-pass1" type="password" class="swal2-input" placeholder="Nueva contraseña">
-        <input id="swal-pass2" type="password" class="swal2-input" placeholder="Confirmar contraseña">`,
+        <div style="position:relative;">
+          <input id="swal-pass1" class="swal2-input" placeholder="Nueva contraseña" type="password" />
+          <i class="fa fa-eye" id="toggle1" style="position:absolute; top:12px; right:15px; cursor:pointer;"></i>
+        </div>
+        <div style="position:relative;">
+          <input id="swal-pass2" class="swal2-input" placeholder="Confirmar contraseña" type="password" />
+          <i class="fa fa-eye" id="toggle2" style="position:absolute; top:12px; right:15px; cursor:pointer;"></i>
+        </div>
+      `,
+      didOpen: () => {
+        addPasswordToggle('toggle1', 'swal-pass1');
+        addPasswordToggle('toggle2', 'swal-pass2');
+      },
       preConfirm: () => {
         const p1 = document.getElementById('swal-pass1').value;
         const p2 = document.getElementById('swal-pass2').value;
         if (p1 !== p2) return Swal.showValidationMessage('Las contraseñas no coinciden');
-        if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{8,}$/.test(p1))
- {
-          return Swal.showValidationMessage('La contraseña no cumple con los requisitos');
+        if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^a-zA-Z\\d]).{8,}$/.test(p1)) {
+          return Swal.showValidationMessage('Debe tener al menos 8 caracteres, mayúsculas, minúsculas, número y símbolo');
         }
         return { newPassword: p1 };
       },
@@ -87,10 +123,20 @@ export default function ProfileSettings({ email }) {
   async function handleEliminarCuenta() {
     const { value: password } = await Swal.fire({
       title: 'Confirmar eliminación',
-      input: 'password',
-      inputLabel: 'Ingresá tu contraseña para continuar',
+      html: `
+        <div style="position:relative;">
+          <input id="swal-delete-pass" class="swal2-input" placeholder="Contraseña" type="password" />
+          <i class="fa fa-eye" id="toggle-delete" style="position:absolute; top:12px; right:15px; cursor:pointer;"></i>
+        </div>
+      `,
+      didOpen: () => addPasswordToggle('toggle-delete', 'swal-delete-pass'),
       showCancelButton: true,
-      confirmButtonText: 'Eliminar'
+      confirmButtonText: 'Eliminar',
+      preConfirm: () => {
+        const pwd = document.getElementById('swal-delete-pass').value;
+        if (!pwd) return Swal.showValidationMessage('La contraseña es obligatoria');
+        return pwd;
+      }
     });
 
     if (!password) return;
@@ -119,8 +165,6 @@ export default function ProfileSettings({ email }) {
         </div>
 
         {userId && <NotificationSettings userId={userId} email={email} />}
-
-
 
         <div className="settings-card delete">
           <h3>Eliminar cuenta</h3>
