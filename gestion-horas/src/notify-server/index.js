@@ -8,57 +8,61 @@ const supabase = createClient(
 );
 
 const today = new Date();
-const todayDate = today.toISOString().split('T')[0]; // YYYY-MM-DD
-const currentTime = today.toTimeString().slice(0, 5); // HH:mm
+const todayArg = new Date(today.toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' }));
+const todayDate = todayArg.toISOString().split('T')[0];
+const currentTime = todayArg.toTimeString().slice(0, 5); // ← esta línea es la que faltaba
 
-// Obtenemos todas las preferencias activas por email
+
+
+// Obtener preferencias activas para la hora actual (email, whatsapp o ambos)
 const { data: prefs, error } = await supabase
   .from('notification_preferences')
-  .select('*, profiles(nombre, email)')
-  .eq('notify_enabled', true)
-  .eq('notify_method', 'email');
+  .select('*, profiles(nombre, email, telefono)')
+  .eq('notify_enabled', true);
 
 if (error) {
   console.error('❌ Error al obtener preferencias:', error.message);
   process.exit(1);
 }
 
-// Filtrar por hora manualmente
+// Filtrar preferencias por la hora actual (currentTime)
 const prefsFiltradas = prefs.filter(pref =>
-  pref.preferred_time.slice(0, 5) === "22:05"
+  pref.preferred_time.slice(0, 5) === currentTime
 );
 
 if (prefsFiltradas.length === 0) {
-  console.log('ℹ️ No hay preferencias activas para este horario y método.');
+  console.log('ℹ️ No hay preferencias activas para este horario.');
   process.exit(0);
 }
 
 for (const pref of prefsFiltradas) {
-  const { user_id, profiles } = pref;
+  const { user_id, profiles, notify_method } = pref;
   const nombre = profiles?.nombre || 'Usuario';
   const email = profiles?.email;
-
-  if (!email) {
-    console.error(`⚠️ No se encontró el email para el perfil ${user_id}`);
-    continue;
-  }
+  const telefono = profiles?.telefono;
 
   const { data: workdays } = await supabase
     .from('workdays')
-    .select('hours')
+    .select('hours_worked')
     .eq('user_id', user_id)
     .eq('date', todayDate);
 
-  const totalHoras = workdays?.reduce((acc, d) => acc + d.hours, 0) || 0;
+  const totalHoras = workdays?.reduce((acc, d) => acc + (d.hours_worked || 0), 0) || 0;
   const restantes = Math.max(0, 8 - totalHoras);
 
-  console.log(`📬 Enviando recordatorio a ${email} (${totalHoras} hs, faltan ${restantes})`);
+  if (notify_method === 'email' || notify_method === 'ambos') {
+    console.log(`📬 Enviando email a ${email}`);
+    await sendEmail({
+      email,
+      nombre,
+      totalHoras,
+      restantes,
+      fecha: today,
+    });
+  }
 
-  await sendEmail({
-    email,
-    nombre,
-    totalHoras,
-    restantes,
-    fecha: today,
-  });
+  if (notify_method === 'whatsapp' || notify_method === 'ambos') {
+    console.log(`📲 Se debería enviar WhatsApp a +${telefono}`);
+    // Aquí implementarías la lógica para enviar WhatsApp usando Twilio u otra API similar.
+  }
 }

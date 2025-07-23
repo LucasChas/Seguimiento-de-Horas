@@ -62,31 +62,37 @@ export default function NotificationSettings({ userId }) {
         preferred_time: time,
         notify_enabled: enabled,
         phone: profile.telefono,
-      });
+      }, { onConflict: 'user_id' });
 
-    if (error) return Swal.fire('Error', error.message, 'error');
+    if (error) {
+      console.error(error);
+      return Swal.fire('Error', error.message, 'error');
+    }
+
     Swal.fire('Guardado', 'Preferencias actualizadas', 'success');
   }
 
-return (
-  <div className="settings-card noti">
-    <h3>Notificaciones</h3>
-    <p className="settings-note">
-      Las notificaciones se enviarán por defecto todos los días hábiles a las 18:00. Podés modificar el método y horario. El email y el teléfono son los que cargaste al registrarte.
-    </p>
+  return (
+    <div className="settings-card noti">
+      <h3>Notificaciones</h3>
+      <p className="settings-note">
+        Las notificaciones se enviarán por defecto todos los días hábiles a las 18:00.
+        Podés modificar el método y horario. El email y el teléfono son los que cargaste al registrarte.
+      </p>
 
-    <div className="settings-field">
-      <label>
-        <input
-          type="checkbox"
-          checked={enabled}
-          onChange={(e) => setEnabled(e.target.checked)}
-        />{' '}
-        Activar notificaciones
-      </label>
-    </div>
+      {/* Activador */}
+      <div className="settings-field">
+        <label>
+          <input
+            type="checkbox"
+            checked={enabled}
+            onChange={(e) => setEnabled(e.target.checked)}
+          />{' '}
+          Activar notificaciones
+        </label>
+      </div>
 
-    {enabled && (
+      {/* Preferencias activas */}
       <div className="noti-visible">
         <div className="settings-inline">
           <span><strong>Email:</strong> {profile?.email || '...'}</span>
@@ -96,7 +102,11 @@ return (
         <div className="settings-row">
           <div className="settings-field">
             <label>Método preferido</label>
-            <select value={method} onChange={(e) => setMethod(e.target.value)}>
+            <select
+              value={method}
+              onChange={(e) => setMethod(e.target.value)}
+              disabled={!enabled}
+            >
               <option value="email">Solo Email</option>
               <option value="whatsapp">Solo WhatsApp</option>
               <option value="ambos">Ambos</option>
@@ -109,16 +119,17 @@ return (
               type="time"
               value={time}
               onChange={(e) => setTime(e.target.value)}
+              disabled={!enabled}
             />
           </div>
         </div>
 
-        <button className="settings-btn" onClick={savePreferences}>
-          Guardar preferencias
-        </button>
+        <div>
+          <button className="settings-btn" onClick={savePreferences}>
+            Guardar preferencias
+          </button>
+        </div>
       </div>
-    )}
-  </div>
-);
-
+    </div>
+  );
 }
