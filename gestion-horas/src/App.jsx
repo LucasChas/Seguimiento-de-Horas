@@ -44,13 +44,13 @@ export default function App() {
   }
 
   return (
-    <div style={{ display: 'flex' }}>
-      <Sidebar onNavigate={handleNavigate} />
-      <div style={{ flex: 1, padding: '2rem' }}>
-        {view === 'calendar' && <WorkCalendar />}
-        {view === 'summary' && <p>🧑 Aquí irá la pantalla de Estadisticas (próximamente).</p>}
-        {view === 'profile' && <Profile />}
-      </div>
-    </div>
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+  <Sidebar onNavigate={handleNavigate} />
+  <div style={{ flex: 1, overflow: 'auto', boxSizing: 'border-box', padding: view === 'profile' ? '0' : '2rem' }}>
+    {view === 'calendar' && <WorkCalendar />}
+    {view === 'summary' && <p>🧑 Aquí irá la pantalla de Estadísticas (próximamente).</p>}
+    {view === 'profile' && <Profile />}
+  </div>
+</div>
   );
 }

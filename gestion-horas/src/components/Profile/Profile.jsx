@@ -31,9 +31,10 @@ export default function Profile() {
   if (loading) return <div className="profile">Cargando perfil...</div>;
 
   return (
+    <>
     <div className="profile">
       <nav className="profile-tabs">
-        {['info', 'feriados', 'causas', 'ajustes'].map(t => (
+        {['información', 'feriados', 'causas', 'ajustes'].map(t => (
           <button
             key={t}
             className={tab === t ? 'active' : ''}
@@ -42,10 +43,11 @@ export default function Profile() {
         ))}
       </nav>
 
-      {tab === 'info' && <ProfileInfo user={user} />}
+      {tab === 'información' && <ProfileInfo user={user} />}
       {tab === 'feriados' && <ProfileHolidays feriados={feriados} setFeriados={setFeriados} />}
       {tab === 'causas' && <ProfileCausas />}
       {tab === 'ajustes' && <ProfileSettings email={user.email} />}
     </div>
+    </>
   );
 }

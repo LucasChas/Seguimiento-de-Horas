@@ -1,22 +1,25 @@
 /* Sidebar.css */
 .sidebar {
-  width: 40vh ; 
+  width: 40vh; 
   max-width: 40vh !important;
   background: linear-gradient(to bottom, #0d47a1, #002171);
   color: #fff;
-  height: 95vh;
+  height: 100vh; /* Cambia a 100vh */
   display: flex;
   flex-direction: column;
   padding: 1rem 0.5rem;
   transition: width 0.3s ease;
   box-shadow: 4px 0 12px rgba(0, 0, 0, 0.2);
   overflow-x: hidden;
+  overflow-y: auto; /* Permite scroll interno solo si necesario */
+  box-sizing: border-box;
+  -ms-overflow-style: none;  /* Oculta scrollbar IE y Edge */
+  scrollbar-width: none; /* Oculta scrollbar Firefox */
 }
 
-
 .sidebar.collapsed {
-  width:  15vh;
-  height: 95vh;
+  width: 15vh;
+  height: 100vh; /* Cambia a 100vh */
 }
 .sidebar-header {
   display: flex;
@@ -121,13 +124,12 @@
 /*Footer*/
 .sidebar-footer {
   margin-top: auto;
+  padding: 0 1.2rem;
+  padding-bottom: 1.5rem; /* Agrega espacio inferior */
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  padding: 0  1.2rem;
-  
-  
-  
+  box-sizing: border-box;
 }
 .sidebar-footer button {
   background: none;
@@ -156,6 +158,11 @@
 
 .sidebar.collapsed .sidebar-footer button span {
   display: none;
+}
+
+
+.sidebar::-webkit-scrollbar {
+  display: none; /* Oculta scrollbar Chrome, Safari */
 }
 
 /* ——— Footer un poco más arriba y siempre visible ——— */
