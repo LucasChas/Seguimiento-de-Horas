@@ -366,3 +366,40 @@
 .add-button:hover {
   background-color: #125aab;
 }
+
+
+/*Causas*/
+
+/* SweetAlert2 personalizado para crear causa */
+.swal2-causa-popup {
+  max-width: 420px !important;
+  width: 100% !important;
+  padding: 2rem !important;
+  overflow-x: hidden !important;
+  box-sizing: border-box;
+}
+
+.swal-causa-form {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.swal-causa-form label {
+  font-weight: 500;
+  font-size: 0.95rem;
+  margin-top: 0.5rem;
+}
+
+.swal2-input,
+.swal2-select {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  font-size: 1rem;
+  border-radius: 8px;
+}
+
+
+/*SETTINGS*/
+

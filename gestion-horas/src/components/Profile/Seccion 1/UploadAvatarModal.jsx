@@ -2,7 +2,7 @@
 import React, { useState, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
 import Swal from 'sweetalert2';
-import getCroppedImg from '../../utils/cropImage.js';
+import getCroppedImg from '../../../utils/cropImage.js';
 import './UploadAvatarModal.css';
 
 const defaultAvatars = [

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Pencil, Check } from 'lucide-react';
-import { supabase } from '../../supabase/client';
+import { supabase } from '../../../supabase/client';
 import UploadAvatarModal from './UploadAvatarModal';
-import defaultAvatar from '../../assets/PerfilDefecto.png';
+import defaultAvatar from '../../../assets/PerfilDefecto.png';
 import Swal from 'sweetalert2';
-import './Profile.css';
+import '../Profile.css';
 
 export default function ProfileInfo() {
   const [nombre, setNombre] = useState('');

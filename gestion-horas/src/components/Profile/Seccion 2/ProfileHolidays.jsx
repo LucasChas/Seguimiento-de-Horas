@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
-import { supabase } from '../../supabase/client';
-import AddHolidayModal from '../HolidayModal/AddHolidayModal';
-import './Profile.css';
+import { supabase } from '../../../supabase/client';
+import AddHolidayModal from '../../HolidayModal/AddHolidayModal';
+import '../Profile.css';
 export default function ProfileHolidays({ feriados, setFeriados }) {
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);

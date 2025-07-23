@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../../supabase/client';
 import './Profile.css';
 
-import ProfileInfo from './ProfileInfo';
-import ProfileHolidays from './ProfileHolidays';
-import ProfileCausas from './ProfileCausas';
-import ProfileSettings from './ProfileSettings';
+import ProfileInfo from './Seccion 1/ProfileInfo';
+import ProfileHolidays from './Seccion 2/ProfileHolidays';
+import ProfileCausas from './Seccion 3/ProfileCausas';
+import ProfileSettings from './Seccion 4/ProfileSettings';
 
 export default function Profile() {
   const [loading, setLoading] = useState(true);
