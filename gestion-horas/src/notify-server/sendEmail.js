@@ -37,20 +37,20 @@ export default async function sendEmail({ email, nombre, totalHoras, restantes, 
     </div>
   `;
 
-  try {
-    const response = await resend.emails.send({
-      from: process.env.RESEND_SENDER,
-      to: email,
-      subject: 'Recordatorio diario - TimeTrack',
-      html: htmlBody,
-    });
+try {
+  const response = await resend.emails.send({
+    from: process.env.RESEND_SENDER,
+    to: email,
+    subject: 'TimeTrack - Recordatorio diario',
+    html: htmlBody,
+  });
 
-    if (response.error) {
-      throw new Error(response.error.message);
-    }
-
-    console.log(`✅ Email enviado a ${email}`);
-  } catch (err) {
-    console.error(`❌ Error al enviar email a ${email}:`, err.message || err);
+  if (response.error) {
+    console.error(`❌ Error de Resend al enviar a ${email}:`, response.error);
+    return;
   }
-}
+
+  console.log(`✅ Email enviado a ${email}`);
+} catch (err) {
+  console.error(`❌ Error inesperado al enviar email a ${email}:`, err.response?.data || err.message || err);
+}}

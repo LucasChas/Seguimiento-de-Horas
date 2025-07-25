@@ -56,6 +56,9 @@ export default async function runNotificaciones() {
 
       console.log(`📤 Enviando email a ${nombre} (${email}) - Total: ${totalHoras}h / Restantes: ${restantes}h`);
       await sendEmail({ email, nombre, totalHoras, restantes, fecha });
+
+      // Esperar 1 segundo antes del próximo envío
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
   } catch (err) {
