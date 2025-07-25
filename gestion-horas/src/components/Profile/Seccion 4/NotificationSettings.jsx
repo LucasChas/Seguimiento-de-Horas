@@ -107,12 +107,12 @@ export default function NotificationSettings({ userId }) {
               onChange={(e) => setMethod(e.target.value)}
               disabled={!enabled}
             >
-              <option value="email">Solo Email</option>
-              <option value="whatsapp">Solo WhatsApp</option>
+              <option value="email">Email</option>
+              <option value="whatsapp">WhatsApp</option>
             </select>
-          </div>
+          
 
-          <div className="settings-field">
+          
             <label>Horario de envío</label>
             <input
               type="time"
@@ -120,7 +120,7 @@ export default function NotificationSettings({ userId }) {
               onChange={(e) => setTime(e.target.value)}
               disabled={!enabled}
             />
-          </div>
+         </div>
         </div>
 
         <div>

@@ -59,11 +59,12 @@ export default function Sidebar({ onNavigate }) {
       </div>
 
       <nav className="sidebar-nav">
-        <button onClick={() => onNavigate('profile')}>
-          👤 {isOpen && <span>Perfil</span>}
-        </button>
+        
         <button onClick={() => onNavigate('calendar')}>
           📅 {isOpen && <span>Calendario</span>}
+        </button>
+        <button onClick={() => onNavigate('profile')}>
+          👤 {isOpen && <span>Perfil</span>}
         </button>
         <button onClick={() => onNavigate('summary')}>
           📊 {isOpen && <span>Estadísticas</span>}
