@@ -30,7 +30,8 @@ export default async function runNotificaciones() {
         notify_method,
         profiles (
           email,
-          nombre
+          nombre,
+          apellido
         )
       `)
       .eq('preferred_time', horaActual)
@@ -44,6 +45,7 @@ export default async function runNotificaciones() {
       const { user_id, profiles: perfil } = pref;
       const email = perfil?.email;
       const nombre = perfil?.nombre;
+      const apellido = perfil?.apellido;
 
       if (!email) {
         console.warn(`⚠️ Usuario ${user_id} no tiene un email configurado. Se omite.`);
@@ -52,20 +54,31 @@ export default async function runNotificaciones() {
 
       const fecha = new Date();
       const fechaStr = fecha.toISOString().split('T')[0];
+      console.log(fechaStr)
 
       // Buscar horas trabajadas del día actual
-      const { data: workData } = await supabase
-        .from('workdays')
-        .select('horas')
-        .eq('user_id', user_id)
-        .eq('fecha', fechaStr);
+    const { data: workData, error: workError } = await supabase
+          .from('workdays')
+          .select('hours_worked')
+          .eq('user_id', user_id)
+          .eq('date', fechaStr);
 
-      const totalHoras = workData?.reduce((sum, w) => sum + (w.horas || 0), 0) || 0;
+        if (workError) {
+          console.error(`❌ Error al consultar workdays para ${email}:`, workError.message);
+          continue;
+        }
+
+    const totalHoras = workData
+      ?.filter(row => row.hours_worked !== null && !isNaN(row.hours_worked))
+      .reduce((sum, row) => sum + parseFloat(row.hours_worked), 0) || 0;
+
+
+
       const restantes = Math.max(0, 8 - totalHoras);
 
       console.log(`📤 Enviando email a ${nombre} (${email}) - Total: ${totalHoras}h / Restantes: ${restantes}h`);
 
-      await sendEmail({ email, nombre, totalHoras, restantes, fecha });
+      await sendEmail({ email, nombre, apellido, totalHoras, restantes, fecha });
 
       // Retardo de 1 segundo
       await delay(1000);

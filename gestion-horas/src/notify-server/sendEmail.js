@@ -1,34 +1,47 @@
 import nodemailer from 'nodemailer';
 
-export default async function sendEmail({ email, nombre, totalHoras, restantes, fecha }) {
+// 🔧 Función para convertir decimal de horas a formato "Xh Ym"
+function formatearHoras(decimal) {
+  const horas = Math.floor(decimal);
+  const minutos = Math.round((decimal - horas) * 60);
+
+  let resultado = '';
+  if (horas > 0) resultado += `${horas}h `;
+  if (minutos > 0) resultado += `${minutos}m`;
+  return resultado.trim() || '0h';
+}
+
+export default async function sendEmail({ email, nombre, apellido, totalHoras, restantes, fecha }) {
   try {
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      }
+        pass: process.env.SMTP_PASS,
+      },
     });
 
     const fechaFormateada = new Date(fecha).toLocaleDateString('es-AR', {
       weekday: 'long',
       day: '2-digit',
       month: '2-digit',
-      year: 'numeric'
+      year: 'numeric',
     });
 
-    const horasTexto = totalHoras === 1 ? '1 hora' : `${totalHoras} horas`;
-    const restantesTexto = restantes === 1 ? '1 hora' : `${restantes} horas`;
-
     const html = `
-      <div style="font-family: Arial, sans-serif; font-size: 16px;">
-        <p>Hola <b>${nombre}</b>,</p>
-        <p>Este es tu resumen de horas trabajadas para el día <b>${fechaFormateada}</b>:</p>
-        <ul>
-          <li><b>Total trabajado:</b> ${horasTexto}</li>
-          <li><b>Restantes para completar las 8h:</b> ${restantesTexto}</li>
+      <div style="font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: auto; padding: 24px; background-color: #f9f9f9; border-radius: 12px; border: 1px solid #ddd;">
+        <h2 style="text-align: center; color: #1976d2; margin-bottom: 20px;">📊 Resumen Diario - TimeTrack Solutions</h2>
+        <p style="font-size: 16px;">Hola <strong>${nombre} ${apellido}</strong>,</p>
+        <p style="font-size: 15px; color: #444;">Este es tu resumen de horas para <strong>${fechaFormateada}</strong>:</p>
+        <ul style="font-size: 15px; color: #444;">
+          <li><strong>Total trabajado:</strong> ${formatearHoras(totalHoras)}</li>
+          <li><strong>Restantes para completar las 8h:</strong> ${formatearHoras(restantes)}</li>
         </ul>
-        <p>Este email fue enviado automáticamente por <b>TimeTrack Solutions</b>.</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="https://seguimientodehoras.vercel.app" style="background-color: #1976d2; color: white; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: bold;">Ir a la plataforma</a>
+        </div>
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #ccc;" />
+        <p style="font-size: 13px; color: #888; text-align: center;">Este es un mensaje automático de TimeTrack Solutions. No respondas a este correo.</p>
       </div>
     `;
 
@@ -36,7 +49,7 @@ export default async function sendEmail({ email, nombre, totalHoras, restantes, 
       from: `"TimeTrack Solutions" <${process.env.SMTP_USER}>`,
       to: email,
       subject: '📊 Recordatorio de Horas Cargadas',
-      html
+      html,
     };
 
     await transporter.sendMail(mailOptions);
