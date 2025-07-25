@@ -1,19 +1,26 @@
-// index.js
 import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
 import sendEmail from './sendEmail.js';
 
+// Inicializar Supabase
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE
 );
 
+// Función para pausar X milisegundos
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Función principal
 export default async function runNotificaciones() {
   const now = new Date();
-  const horaActual = now.toTimeString().slice(0, 5); // HH:MM
+  const horaActual = now.toTimeString().slice(0, 5); // Formato HH:MM
   console.log(`🕓 Ejecutando notificaciones para hora actual: ${horaActual}`);
 
   try {
+    // Buscar usuarios con preferencia de notificación para esta hora
     const { data: prefs, error } = await supabase
       .from('notification_preferences')
       .select(`
@@ -32,6 +39,7 @@ export default async function runNotificaciones() {
 
     if (error) throw error;
 
+    // Iterar sobre cada preferencia y enviar email con retardo
     for (const pref of prefs) {
       const { user_id, profiles: perfil } = pref;
       const email = perfil?.email;
@@ -45,6 +53,7 @@ export default async function runNotificaciones() {
       const fecha = new Date();
       const fechaStr = fecha.toISOString().split('T')[0];
 
+      // Buscar horas trabajadas del día actual
       const { data: workData } = await supabase
         .from('workdays')
         .select('horas')
@@ -55,10 +64,11 @@ export default async function runNotificaciones() {
       const restantes = Math.max(0, 8 - totalHoras);
 
       console.log(`📤 Enviando email a ${nombre} (${email}) - Total: ${totalHoras}h / Restantes: ${restantes}h`);
+
       await sendEmail({ email, nombre, totalHoras, restantes, fecha });
 
-      // Esperar 1 segundo antes del próximo envío
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Retardo de 1 segundo
+      await delay(1000);
     }
 
   } catch (err) {

@@ -1,56 +1,47 @@
-// sendEmail.js
-import 'dotenv/config';
-import { Resend } from 'resend';
-
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-function formatearHoras(decimal) {
-  const horas = Math.floor(decimal);
-  const minutos = Math.round((decimal - horas) * 60);
-  let texto = '';
-  if (horas > 0) texto += `${horas}h`;
-  if (minutos > 0) texto += ` ${minutos}m`;
-  return texto.trim() || '0h';
-}
+import nodemailer from 'nodemailer';
 
 export default async function sendEmail({ email, nombre, totalHoras, restantes, fecha }) {
-  const dias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-  const meses = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      }
+    });
 
-  const diaTexto = dias[fecha.getDay()];
-  const fechaTexto = `${diaTexto} ${fecha.getDate()} de ${meses[fecha.getMonth()]}`;
+    const fechaFormateada = new Date(fecha).toLocaleDateString('es-AR', {
+      weekday: 'long',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
 
-  const htmlBody = `
-    <div style="font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: auto; padding: 24px; background-color: #f5f7fb; border-radius: 12px; border: 1px solid #e0e0e0;">
-      <h2 style="text-align: center; color: #1976d2; margin-bottom: 12px;">⏰ TimeTrack - Recordatorio Diario</h2>
-      <p style="font-size: 16px; color: #333;">Hola <strong style="color: #1976d2;">${nombre}</strong>,</p>
-      <p style="font-size: 15px; color: #444; margin-top: 12px;">
-        Hoy es <strong style="color: #1976d2;">${fechaTexto}</strong>.<br>
-        Llevás registradas <strong style="color: #388e3c;">${formatearHoras(totalHoras)}</strong>.<br>
-        Te faltan <strong style="color: #d32f2f;">${formatearHoras(restantes)}</strong> para completar tu jornada.
-      </p>
-      <div style="text-align: center; margin: 30px 0;">
-        <a href="https://seguimientodehoras.vercel.app" style="background-color: #1976d2; color: white; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: bold;">Ir a TimeTrack</a>
+    const horasTexto = totalHoras === 1 ? '1 hora' : `${totalHoras} horas`;
+    const restantesTexto = restantes === 1 ? '1 hora' : `${restantes} horas`;
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; font-size: 16px;">
+        <p>Hola <b>${nombre}</b>,</p>
+        <p>Este es tu resumen de horas trabajadas para el día <b>${fechaFormateada}</b>:</p>
+        <ul>
+          <li><b>Total trabajado:</b> ${horasTexto}</li>
+          <li><b>Restantes para completar las 8h:</b> ${restantesTexto}</li>
+        </ul>
+        <p>Este email fue enviado automáticamente por <b>TimeTrack Solutions</b>.</p>
       </div>
-      <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;" />
-      <p style="font-size: 13px; color: #888; text-align: center;">Este es un mensaje automático. No respondas a este correo.</p>
-    </div>
-  `;
+    `;
 
-try {
-  const response = await resend.emails.send({
-    from: process.env.RESEND_SENDER,
-    to: email,
-    subject: 'TimeTrack - Recordatorio diario',
-    html: htmlBody,
-  });
+    const mailOptions = {
+      from: `"TimeTrack Solutions" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: '📊 Recordatorio de Horas Cargadas',
+      html
+    };
 
-  if (response.error) {
-    console.error(`❌ Error de Resend al enviar a ${email}:`, response.error);
-    return;
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ Email enviado a ${email}`);
+  } catch (error) {
+    console.error(`❌ Error al enviar email a ${email}:`, error);
   }
-
-  console.log(`✅ Email enviado a ${email}`);
-} catch (err) {
-  console.error(`❌ Error inesperado al enviar email a ${email}:`, err.response?.data || err.message || err);
-}}
+}
