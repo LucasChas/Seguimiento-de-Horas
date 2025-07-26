@@ -1,0 +1,7 @@
+
+{
+  "name": "delete-user",
+  "endpoint": "/delete-user",
+  "method": "POST",
+  "verify_jwt": false
+}
