@@ -1,5 +1,4 @@
 // ProfileSettings.jsx
-// ProfileSettings.jsx
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import { supabase } from '../../../supabase/client';
@@ -31,6 +30,26 @@ export default function ProfileSettings({ email }) {
     };
   };
 
+  function validarEmail(emailInput) {
+    const regex = /\S+@\S+\.\S+/;
+    if (!emailInput?.trim()) return 'El correo no puede estar vacío.';
+    if (!regex.test(emailInput)) return 'Ingresá un correo válido. Ejemplo: tuCorreo@dominio.com';
+    return null;
+  }
+
+  async function emailYaRegistrado(correo) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', correo.toLowerCase())
+      .maybeSingle();
+    if (error) {
+      console.error(error);
+      return { existe: false, error };
+    }
+    return { existe: !!data };
+  }
+
   async function handleChangeEmail() {
     const { value: currentPassword } = await Swal.fire({
       title: 'Confirmá tu contraseña',
@@ -38,89 +57,158 @@ export default function ProfileSettings({ email }) {
         <div style="position:relative;">
           <input id="swal-pass-confirm" class="swal2-input" placeholder="Contraseña actual" type="password" style="padding-right:2.5rem;"/>
           <span id="emoji-confirm" style="position:absolute;top:50%;right:15px;transform:translateY(-50%);cursor:pointer;">👁️</span>
-        </div>
-      `,
+        </div>`,
       didOpen: () => handlePasswordToggle('swal-pass-confirm', 'emoji-confirm'),
       showCancelButton: true,
       preConfirm: () => {
         const pwd = document.getElementById('swal-pass-confirm').value;
-        if (!pwd) return Swal.showValidationMessage('La contraseña es obligatoria');
+        if (!pwd) {
+          Swal.showValidationMessage('La contraseña es obligatoria');
+          return false;
+        }
         return pwd;
       }
     });
 
     if (!currentPassword) return;
-    const { error } = await supabase.auth.signInWithPassword({ email, password: currentPassword });
-    if (error) return Swal.fire('Error', 'Contraseña incorrecta', 'error');
+
+    const { error: authError } = await supabase.auth.signInWithPassword({ email, password: currentPassword });
+    if (authError) {
+      return Swal.fire({ icon: 'error', title: 'Error', text: 'Contraseña incorrecta' });
+    }
 
     const { value: newEmail } = await Swal.fire({
       title: 'Nuevo correo electrónico',
       input: 'email',
       inputValue: email,
       showCancelButton: true,
-      confirmButtonText: 'Actualizar'
+      confirmButtonText: 'Actualizar',
+      preConfirm: async (input) => {
+        const err = validarEmail(input);
+        if (err) return Swal.showValidationMessage(err);
+
+        if (input.toLowerCase() === email.toLowerCase()) {
+          return Swal.showValidationMessage('Debe ser distinto al correo actual.');
+        }
+
+        const { existe, error } = await emailYaRegistrado(input);
+        if (error) return Swal.showValidationMessage('Error al verificar el correo.');
+        if (existe) return Swal.showValidationMessage('Este correo ya está registrado.');
+        return input;
+      }
     });
 
-    if (!newEmail) return;
-    const { error: updateErr } = await supabase.auth.updateUser({ email: newEmail });
-    if (updateErr) return Swal.fire('Error', updateErr.message, 'error');
+    if (!newEmail || newEmail === email) return;
 
-    Swal.fire('Listo', 'Te enviamos un correo de confirmación', 'success');
-  }
-  
-async function handleEliminarCuenta() {
-  const { value: password } = await Swal.fire({
-    title: 'Confirmar eliminación',
-    html: `
-      <div style="position:relative;">
-        <input id="swal-delete-pass" class="swal2-input" placeholder="Contraseña" type="password" style="padding-right:2.5rem;"/>
-        <span id="emoji-delete" style="position:absolute;top:50%;right:15px;transform:translateY(-50%);cursor:pointer;">👁️</span>
-      </div>
-    `,
-    didOpen: () => handlePasswordToggle('swal-delete-pass', 'emoji-delete'),
-    showCancelButton: true,
-    confirmButtonText: 'Eliminar',
-    preConfirm: () => {
-      const pwd = document.getElementById('swal-delete-pass').value;
-      if (!pwd) return Swal.showValidationMessage('La contraseña es obligatoria');
-      return pwd;
+    const { error: updateErr } = await supabase.auth.updateUser({ data: {}, email: String(newEmail) });
+
+    if (updateErr) {
+      return Swal.fire({ icon: 'error', title: 'Error', text: updateErr.message });
     }
-  });
 
-  if (!password) return;
-
-  const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
-  if (authError) {
-    return Swal.fire('Error', 'Contraseña incorrecta', 'error');
+    Swal.fire('Listo', 'Te enviamos un correo de confirmación.', 'success');
   }
 
-  const response = await fetch('https://mcrdacssebaldbevaybu.supabase.co/functions/v1/delete-user', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ user_id: data.user.id })
-  });
+  async function  handleInviteUser() {
+    const { value: inviteEmail } = await Swal.fire({
+      title: 'Invitar nuevo usuario',
+      input: 'email',
+      inputPlaceholder: 'correo@ejemplo.com',
+      showCancelButton: true,
+      confirmButtonText: 'Enviar invitación',
+      preConfirm: async (input) => {
+        const err = validarEmail(input);
+        if (err) return Swal.showValidationMessage(err);
 
-  const result = await response.json();
-  if (!response.ok) {
-    console.error(result);
-    return Swal.fire('Error', result.error || 'No se pudo eliminar la cuenta', 'error');
+        if (input.toLowerCase() === email.toLowerCase()) {
+          return Swal.showValidationMessage('No podés invitarte a vos mismo.');
+        }
+
+        const { existe, error } = await emailYaRegistrado(input);
+        if (error) return Swal.showValidationMessage('Error al verificar el correo.');
+        if (existe) return Swal.showValidationMessage('Este correo ya pertenece a un usuario registrado.');
+        return input;
+      }
+    });
+
+    if (!inviteEmail) return;
+
+    Swal.fire({
+      title: 'Enviando invitación...',
+      text: 'Por favor esperá un momento...',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => Swal.showLoading()
+    });
+
+    const res = await fetch('https://mcrdacssebaldbevaybu.supabase.co/functions/v1/invite-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        email: inviteEmail,
+        redirecTo: 'http://localhost:5173/login' 
+      })
+    });
+
+    const result = await res.json();
+    Swal.close();
+
+    if (!res.ok) {
+      return Swal.fire({ icon: 'error', title: 'Error', text: result.error || 'No se pudo invitar al usuario' });
+    }
+
+    Swal.fire('Invitación enviada', `Se envió un correo a ${inviteEmail}`, 'success');
   }
 
-  await supabase.auth.signOut();
-  Swal.fire('Cuenta eliminada', 'Tu cuenta fue eliminada correctamente.', 'success').then(() => {
-    window.location.href = '/login';
-  });
-}
+  async function handleEliminarCuenta() {
+    const { value: password } = await Swal.fire({
+      title: 'Confirmar eliminación',
+      html: `
+        <div style="position:relative;">
+          <input id="swal-delete-pass" class="swal2-input" placeholder="Contraseña" type="password" style="padding-right:2.5rem;"/>
+          <span id="emoji-delete" style="position:absolute;top:50%;right:15px;transform:translateY(-50%);cursor:pointer;">👁️</span>
+        </div>`,
+      didOpen: () => handlePasswordToggle('swal-delete-pass', 'emoji-delete'),
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar',
+      preConfirm: () => {
+        const pwd = document.getElementById('swal-delete-pass').value;
+        if (!pwd) return Swal.showValidationMessage('La contraseña es obligatoria');
+        return pwd;
+      }
+    });
 
-async function handleChangePassword() {
+    if (!password) return;
+
+    const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
+    if (authError) return Swal.fire('Error', 'Contraseña incorrecta', 'error');
+
+    const response = await fetch('https://mcrdacssebaldbevaybu.supabase.co/functions/v1/delete-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: data.user.id })
+    });
+
+    const result = await response.json();
+    if (!response.ok) {
+      console.error(result);
+      return Swal.fire('Error', result.error || 'No se pudo eliminar la cuenta', 'error');
+    }
+
+    await supabase.auth.signOut();
+    Swal.fire('Cuenta eliminada', 'Tu cuenta fue eliminada correctamente.', 'success').then(() => {
+      window.location.href = '/login';
+    });
+  }
+
+  async function handleChangePassword() {
     const { value: currentPassword } = await Swal.fire({
       title: 'Contraseña actual',
       html: `
         <div style="position:relative;">
           <input id="swal-current-pass" class="swal2-input" placeholder="Contraseña actual" type="password" style="padding-right:2.5rem;"/>
           <span id="emoji-current" style="position:absolute;top:50%;right:15px;transform:translateY(-50%);cursor:pointer;">👁️</span>
-        </div>
-      `,
+        </div>`,
       didOpen: () => handlePasswordToggle('swal-current-pass', 'emoji-current'),
       showCancelButton: true,
       preConfirm: () => {
@@ -131,6 +219,7 @@ async function handleChangePassword() {
     });
 
     if (!currentPassword) return;
+
     const { error } = await supabase.auth.signInWithPassword({ email, password: currentPassword });
     if (error) return Swal.fire('Error', 'Contraseña incorrecta', 'error');
 
@@ -144,8 +233,7 @@ async function handleChangePassword() {
         <div style="position:relative;">
           <input id="swal-pass2" class="swal2-input" placeholder="Confirmar contraseña" type="password" style="padding-right:2.5rem;"/>
           <span id="emoji-pass2" style="position:absolute;top:50%;right:15px;transform:translateY(-50%);cursor:pointer;">👁️</span>
-        </div>
-      `,
+        </div>`,
       didOpen: () => {
         handlePasswordToggle('swal-pass1', 'emoji-pass1');
         handlePasswordToggle('swal-pass2', 'emoji-pass2');
@@ -163,40 +251,12 @@ async function handleChangePassword() {
     });
 
     if (!formValues) return;
+
     const { error: updateError } = await supabase.auth.updateUser({ password: formValues.newPassword });
     if (updateError) return Swal.fire('Error', updateError.message, 'error');
+
     Swal.fire('Listo', 'Tu contraseña fue actualizada', 'success');
   }
-
-
-    async function handleInviteUser() {
-  const { value: inviteEmail } = await Swal.fire({
-    title: 'Invitar nuevo usuario',
-    input: 'email',
-    inputPlaceholder: 'correo@ejemplo.com',
-    showCancelButton: true,
-    confirmButtonText: 'Enviar invitación'
-  });
-
-  if (!inviteEmail) return;
-
-  const res = await fetch('https://mcrdacssebaldbevaybu.supabase.co/functions/v1/invite-user', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({ email: inviteEmail })
-});
-
-
-  const result = await res.json();
-
-  if (!res.ok) {
-    return Swal.fire('Error', result.error || 'No se pudo invitar al usuario', 'error');
-  }
-
-  Swal.fire('Invitación enviada', `Se envió un correo a ${inviteEmail}`, 'success');
-}
 
   return (
     <div className="settings-section">

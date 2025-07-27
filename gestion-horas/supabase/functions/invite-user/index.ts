@@ -32,7 +32,7 @@ serve(async (req) => {
       // @ts-ignore
       Deno.env.get("SUPABASE_URL")!,
       // @ts-ignore
-      Deno.env.get("SUPABASE_SERVICE_ROLE")!
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
     const { error } = await supabase.auth.admin.inviteUserByEmail(email);
