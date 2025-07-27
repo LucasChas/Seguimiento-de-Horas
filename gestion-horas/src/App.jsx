@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { supabase } from './supabase/client';
 import Login from './components/Auth/Login/Login';
 import Register from './components/Auth/Register/Register';
@@ -6,10 +7,12 @@ import WorkCalendar from './components/Calendar/Calendar';
 import Sidebar from './components/Sidebar/Sidebar';
 import Profile from './components/Profile/Profile';
 
-export default function App() {
+function ProtectedRoute({ session, children }) {
+  return session ? children : <Navigate to="/login" replace />;
+}
+
+function App() {
   const [session, setSession] = useState(null);
-  const [isRegistering, setIsRegistering] = useState(false);
-  const [view, setView] = useState('calendar');
 
   useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -23,34 +26,64 @@ export default function App() {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  const handleLogin = () => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
-  };
+  return (
+    <Router>
+      <Routes>
+        <Route
+          path="/login"
+          element={
+            session ? (
+              <Navigate to="/calendar" />
+            ) : (
+              <Login onLogin={() => supabase.auth.getSession().then(({ data }) => setSession(data.session))} />
+            )
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            session ? <Navigate to="/calendar" /> : <Register switchToLogin={() => window.location.href = '/login'} />
+          }
+        />
+        <Route
+          path="/*"
+          element={
+            <ProtectedRoute session={session}>
+              <MainLayout />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </Router>
+  );
+}
+
+function MainLayout() {
+  const navigate = useNavigate();
 
   const handleNavigate = (target) => {
     if (target === 'logout') {
-      setSession(null);
+      supabase.auth.signOut().then(() => {
+        window.location.href = '/login';
+      });
     } else {
-      setView(target);
+      navigate(`/${target}`);
     }
   };
 
-  if (!session) {
-    return isRegistering ? (
-      <Register switchToLogin={() => setIsRegistering(false)} />
-    ) : (
-      <Login onLogin={handleLogin} switchToRegister={() => setIsRegistering(true)} />
-    );
-  }
-
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-  <Sidebar onNavigate={handleNavigate} />
-  <div style={{ flex: 1, overflow: 'auto', boxSizing: 'border-box', padding: view === 'profile' ? '0' : '2rem' }}>
-    {view === 'calendar' && <WorkCalendar />}
-    {view === 'summary' && <p>🧑 Aquí irá la pantalla de Estadísticas (próximamente).</p>}
-    {view === 'profile' && <Profile />}
-  </div>
-</div>
+      <Sidebar onNavigate={handleNavigate} />
+      <div style={{ flex: 1, overflow: 'auto', boxSizing: 'border-box', padding: '2rem' }}>
+        <Routes>
+          <Route path="/calendar" element={<WorkCalendar />} />
+          <Route path="/summary" element={<p>🧑 Aquí irá la pantalla de Estadísticas (próximamente).</p>} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="*" element={<Navigate to="/calendar" />} />
+        </Routes>
+      </div>
+    </div>
   );
 }
+
+export default App;

@@ -146,7 +146,7 @@ export default function ProfileSettings({ email }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         email: inviteEmail,
-        redirecTo: 'http://localhost:5173/login' 
+        redirecTo: 'http://localhost:5173/login'  //no redirige alli, redirige a localhost:3000
       })
     });
 
