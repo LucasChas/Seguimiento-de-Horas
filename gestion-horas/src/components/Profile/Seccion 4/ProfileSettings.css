@@ -13,7 +13,9 @@
   grid-template-areas:
     "password noti"
     "email noti"
-    "delete noti";
+    "delete noti"
+    "empty noti"
+    "empty invite"; /* Mueve invite debajo de noti */
   gap: 0.8rem;
   width: 100%;
   max-width: 90rem;
@@ -21,11 +23,16 @@
   align-items: start;
 }
 
+/* Nueva asignación de área para Invitar */
+
+
 /* Áreas de grilla */
 .settings-card.email { grid-area: email; }
 .settings-card.password { grid-area: password; }
 .settings-card.noti { grid-area: noti; }
 .settings-card.delete { grid-area: delete; }
+.settings-card.invite {grid-area: invite;}
+
 
 .settings-card {
   background: #ffffff;
@@ -231,3 +238,4 @@
 .swal2-html-container {
   overflow-x: hidden !important;
 }
+

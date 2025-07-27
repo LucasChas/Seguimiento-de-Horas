@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
 import sendEmail from './sendEmail.js';
-
+import sendWhatsApp from './sendWhatsApp.js';
 // Inicializar Supabase
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -17,6 +17,7 @@ function delay(ms) {
 export default async function runNotificaciones() {
   const now = new Date();
   const horaActual = now.toTimeString().slice(0, 5); // Formato HH:MM
+  
   console.log(`🕓 Ejecutando notificaciones para hora actual: ${horaActual}`);
 
   try {

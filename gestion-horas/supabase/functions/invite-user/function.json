@@ -1,0 +1,7 @@
+
+{
+  "name": "invite-user",
+  "endpoint": "/invite-user",
+  "method": "POST",
+  "verify_jwt": false
+}

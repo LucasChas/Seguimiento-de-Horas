@@ -15,7 +15,7 @@ export default function NotificationSettings({ userId }) {
   async function loadProfileAndPrefs() {
     const { data: prof, error: err1 } = await supabase
       .from('profiles')
-      .select('email, telefono')
+      .select('email')
       .eq('id', userId)
       .single();
 
@@ -45,13 +45,7 @@ export default function NotificationSettings({ userId }) {
     }
   }
 
-  function formatPhone(phone) {
-    if (!phone) return '';
-    const clean = phone.replace(/\D/g, '');
-    const area = clean.slice(2, 6);
-    const number = clean.slice(6);
-    return `+54 ${area} ${number}`;
-  }
+
 
   async function savePreferences() {
     const { error } = await supabase
@@ -77,7 +71,7 @@ export default function NotificationSettings({ userId }) {
       <h3>Notificaciones</h3>
       <p className="settings-note">
         Las notificaciones se enviarán por defecto todos los días hábiles a las 18:00.
-        Podés modificar el método y horario. El email y el teléfono son los que cargaste al registrarte.
+        Podés modificar el horario de envio.
       </p>
 
       {/* Activador */}
@@ -96,23 +90,10 @@ export default function NotificationSettings({ userId }) {
       <div className="noti-visible">
         <div className="settings-inline">
           <span><strong>Email:</strong> {profile?.email || '...'}</span>
-          <span><strong>Teléfono:</strong> {formatPhone(profile?.telefono)}</span>
         </div>
 
         <div className="settings-row">
           <div className="settings-field">
-            <label>Método preferido</label>
-            <select
-              value={method}
-              onChange={(e) => setMethod(e.target.value)}
-              disabled={!enabled}
-            >
-              <option value="email">Email</option>
-              <option value="whatsapp">WhatsApp</option>
-            </select>
-          
-
-          
             <label>Horario de envío</label>
             <input
               type="time"
@@ -120,12 +101,12 @@ export default function NotificationSettings({ userId }) {
               onChange={(e) => setTime(e.target.value)}
               disabled={!enabled}
             />
-         </div>
+        </div>
         </div>
 
         <div>
           <button className="settings-btn" onClick={savePreferences}>
-            Guardar preferencias
+            Guardar preferencia
           </button>
         </div>
       </div>

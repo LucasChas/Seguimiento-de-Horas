@@ -168,11 +168,41 @@ async function handleChangePassword() {
     Swal.fire('Listo', 'Tu contraseña fue actualizada', 'success');
   }
 
+
+    async function handleInviteUser() {
+  const { value: inviteEmail } = await Swal.fire({
+    title: 'Invitar nuevo usuario',
+    input: 'email',
+    inputPlaceholder: 'correo@ejemplo.com',
+    showCancelButton: true,
+    confirmButtonText: 'Enviar invitación'
+  });
+
+  if (!inviteEmail) return;
+
+  const res = await fetch('https://mcrdacssebaldbevaybu.supabase.co/functions/v1/invite-user', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({ email: inviteEmail })
+});
+
+
+  const result = await res.json();
+
+  if (!res.ok) {
+    return Swal.fire('Error', result.error || 'No se pudo invitar al usuario', 'error');
+  }
+
+  Swal.fire('Invitación enviada', `Se envió un correo a ${inviteEmail}`, 'success');
+}
+
   return (
     <div className="settings-section">
       <div className="settings-grid">
         <div className="settings-card email">
-          <h3>Cambiar Email</h3>
+          <h3 className='h3-settings'>Cambiar Email</h3>
           <div className="settings-row">
             <input type="email" value={email} readOnly />
             <button className="settings-btn" onClick={handleChangeEmail}>Cambiar email</button>
@@ -180,7 +210,7 @@ async function handleChangePassword() {
         </div>
 
         <div className="settings-card password">
-          <h3>Cambiar Contraseña</h3>
+          <h3 className='h3-settings'>Cambiar Contraseña</h3>
           <div className="settings-row">
             <input type="password" value="********" readOnly />
             <button className="settings-btn" onClick={handleChangePassword}>Cambiar contraseña</button>
@@ -189,8 +219,15 @@ async function handleChangePassword() {
 
         {userId && <NotificationSettings userId={userId} email={email} />}
 
+        <div className="settings-card invite">
+          <h3>Invitar a Usuarios</h3>
+          <div className="settings-row">
+            <button className="settings-btn" onClick={handleInviteUser}>Invitar nuevo usuario</button>
+          </div>
+        </div>
+
         <div className="settings-card delete">
-          <h3>Eliminar cuenta</h3>
+          <h3 className='h3-settings'>Eliminar cuenta</h3>
           <p className="settings-note">Esta acción es irreversible. Todos tus datos serán eliminados.</p>
           <button className="settings-btn danger" onClick={handleEliminarCuenta}>Eliminar cuenta</button>
         </div>
