@@ -6,7 +6,7 @@ import Register from './components/Auth/Register/Register';
 import WorkCalendar from './components/Calendar/Calendar';
 import Sidebar from './components/Sidebar/Sidebar';
 import Profile from './components/Profile/Profile';
-
+import Estadisticas from './components/Estadisticas/Estadistica';
 function ProtectedRoute({ session, children }) {
   return session ? children : <Navigate to="/login" replace />;
 }
@@ -77,7 +77,7 @@ function MainLayout() {
       <div style={{ flex: 1, overflow: 'auto', boxSizing: 'border-box', padding: '2rem' }}>
         <Routes>
           <Route path="/calendar" element={<WorkCalendar />} />
-          <Route path="/summary" element={<p>🧑 Aquí irá la pantalla de Estadísticas (próximamente).</p>} />
+          <Route path="/summary" element={<Estadisticas/>} />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<Navigate to="/calendar" />} />
         </Routes>

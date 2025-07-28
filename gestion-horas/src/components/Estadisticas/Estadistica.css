@@ -1,0 +1,47 @@
+/* Estadisticas.css */
+.estadisticas-dashboard {
+  padding: 2rem;
+  margin-top: 2rem;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.estadisticas-dashboard h2 {
+  color: #1a237e;
+  font-size: 1.6rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.estadisticas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.2rem;
+}
+
+.stat-card {
+  background: #f5f5f5;
+  border-radius: 10px;
+  padding: 1.2rem;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  background: #e3f2fd;
+}
+
+.stat-card strong {
+  display: block;
+  font-size: 2rem;
+  color: #0d47a1;
+  margin-bottom: 0.5rem;
+}
+
+.stat-card span {
+  font-size: 1rem;
+  color: #333;
+}

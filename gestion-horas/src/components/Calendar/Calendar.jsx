@@ -37,6 +37,7 @@ export default function WorkCalendar() {
 
   async function fetchWorkdays() {
     const { data: { user } } = await supabase.auth.getUser();
+    console.log("Calendar: USER",user)
     const { data, error } = await supabase
       .from('workdays')
       .select('*')
