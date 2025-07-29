@@ -9,7 +9,7 @@ import ProfileSettings from './Seccion 4/ProfileSettings';
 
 export default function Profile() {
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState('info');
+  const [tab, setTab] = useState('información');
   const [user, setUser] = useState(null);
   const [feriados, setFeriados] = useState([]);
 
