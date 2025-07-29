@@ -1,4 +1,4 @@
-import { supabase } from '../supabase/client';
+import { supabase } from '../../supabase/client';
 
 /**
  * Trae todos los feriados para el usuario actual:

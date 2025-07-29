@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { supabase } from './supabase/client';
+import { supabase } from '../supabase/client';
 import Login from './components/Auth/Login/Login';
 import Register from './components/Auth/Register/Register';
 import WorkCalendar from './components/Calendar/Calendar';
@@ -49,7 +49,7 @@ function App() {
           path="/*"
           element={
             <ProtectedRoute session={session}>
-              <MainLayout />
+              <MainLayout session={session} />
             </ProtectedRoute>
           }
         />
@@ -58,7 +58,7 @@ function App() {
   );
 }
 
-function MainLayout() {
+function MainLayout({ session }) {
   const navigate = useNavigate();
 
   const handleNavigate = (target) => {
@@ -77,7 +77,7 @@ function MainLayout() {
       <div style={{ flex: 1, overflow: 'auto', boxSizing: 'border-box', padding: '2rem' }}>
         <Routes>
           <Route path="/calendar" element={<WorkCalendar />} />
-          <Route path="/summary" element={<Estadisticas/>} />
+          <Route path="/summary" element={<Estadisticas selectedDate={new Date()} userId={session?.user?.id} />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<Navigate to="/calendar" />} />
         </Routes>

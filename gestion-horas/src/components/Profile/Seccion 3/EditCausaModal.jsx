@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import '../../DayModal/DayModal.css';
 import Swal from 'sweetalert2';
-import { supabase } from '../../../supabase/client';
+import { supabase } from '../../../../supabase/client';
 
 export default function EditCausaModal({ causa, onClose, onUpdated }) {
   const [nombre, setNombre] = useState(causa.name);

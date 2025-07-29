@@ -1,7 +1,6 @@
 import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
 import sendEmail from './sendEmail.js';
-import sendWhatsApp from './sendWhatsApp.js';
 // Inicializar Supabase
 const supabase = createClient(
   process.env.SUPABASE_URL,

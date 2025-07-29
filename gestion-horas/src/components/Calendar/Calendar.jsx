@@ -14,7 +14,7 @@ import {
 } from 'date-fns';
 import './Calendar.css';
 import DayModal from '../DayModal/DayModal';
-import { supabase } from '../../supabase/client';
+import { supabase } from '../../../supabase/client';
 import MonthSummary from '../MonthSummary/MonthSummary';
 import { Tooltip } from 'react-tooltip';
 import Swal from 'sweetalert2';
@@ -37,7 +37,7 @@ export default function WorkCalendar() {
 
   async function fetchWorkdays() {
     const { data: { user } } = await supabase.auth.getUser();
-    console.log("Calendar: USER",user)
+   
     const { data, error } = await supabase
       .from('workdays')
       .select('*')

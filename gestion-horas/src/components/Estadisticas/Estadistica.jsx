@@ -1,4 +1,4 @@
-// Estadistica.jsx
+// Estadistica.jsx (Actualizado para mostrar tareas y causas más frecuentes con etiquetas descriptivas, y corregir cálculo por suma total de horas)
 import React, { useEffect, useState } from 'react';
 import './Estadistica.css';
 import {
@@ -8,33 +8,32 @@ import {
   format,
   isWeekend,
   parseISO,
-  differenceInCalendarWeeks
+  addMonths,
+  subMonths,
+  getISOWeek
 } from 'date-fns';
+import { es } from 'date-fns/locale';
 import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
-import { supabase } from '../../supabase/client';
+import { supabase } from '../../../supabase/client';
 
-export default function Estadisticas({ selectedDate, holidays = [] }) {
+export default function Estadisticas({ holidays = [], userId }) {
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [stats, setStats] = useState({});
-  const [diasCompletos, setDiasCompletos] = useState([]);
-  const [diasExternos, setDiasExternos] = useState([]);
-  const [userId, setUserId] = useState(null);
-  const [workdays, setWorkdays] = useState([]);
+  const [detalles, setDetalles] = useState({});
 
+  const handleMesChange = (e) => {
+    const [year, month] = e.target.value.split('-');
+    setSelectedDate(new Date(year, parseInt(month) - 1, 1));
+  };
+ const convertirHoras = (h) => {
+    const horas = Math.floor(h);
+    const minutos = Math.round((h - horas) * 60);
+    return `${horas} h ${minutos} min`;
+  };
   useEffect(() => {
     const fetchStats = async () => {
-      if (!selectedDate) return;
-
-      // ✅ Obtener usuario con la misma forma que Calendar.jsx
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) {
-        console.error('❌ Error obteniendo el usuario:', userError);
-        Swal.fire('Error', 'No se pudo obtener el usuario autenticado.', 'error');
-        return;
-      }
-
-      const userIdLocal = user.id;
-      setUserId(userIdLocal);
+      if (!selectedDate || !userId) return;
 
       const start = startOfMonth(selectedDate);
       const end = endOfMonth(selectedDate);
@@ -46,21 +45,17 @@ export default function Estadisticas({ selectedDate, holidays = [] }) {
         return !isWeekend(day) && !holidaySet.has(iso);
       });
 
-      const { data: workdayData, error: wdError } = await supabase
+      const { data: workdayData, error } = await supabase
         .from('workdays')
         .select('*')
-        .eq('user_id', userIdLocal)
+        .eq('user_id', userId)
         .gte('date', format(start, 'yyyy-MM-dd'))
         .lte('date', format(end, 'yyyy-MM-dd'));
 
-      if (wdError) {
-        console.error('❌ Error cargando workdays:', wdError);
-        Swal.fire('Error', 'No se pudo cargar la información de días trabajados.', 'error');
+      if (error) {
+        console.error('❌ Error cargando workdays:', error);
         return;
       }
-
-      setWorkdays(workdayData);
-      console.log('📥 workdays:', workdayData);
 
       const resumen = {
         totalDiasLaborales: laborables.length,
@@ -68,146 +63,253 @@ export default function Estadisticas({ selectedDate, holidays = [] }) {
         diasTrabajadosParciales: 0,
         horasTotalesTrabajadas: 0,
         diasConHorasExtra: 0,
-        causasExternas: {},
         diasExternos: 0,
-        jornadasCompletasAusencia: 0,
         diasSinRegistro: 0,
         diasConDescripcion: 0,
-        diasConsecutivos: 0,
         mejorRacha: 0,
-        promedioHorasPorDia: 0
+        promedioHorasPorDia: 0,
+        horasExtraAcumuladas: 0,
+        causasFrecuentes: {},
+        tareasFrecuentes: {},
+        horasPorTarea: {},
+        causaMasFrecuente: '-',
+        tareaMasFrecuente: '-',
+        tareaMayorDedicacion: '-'
       };
 
-      const diasConRegistro = new Set();
-      const diasConDescripcion = new Set();
-      const diasConHoras = {};
-      const diasDetallesCompletos = [];
-      const diasDetallesExternos = [];
+      const detallesR = {
+        completos: [],
+        parciales: [],
+        externos: [],
+        sinRegistro: [],
+        horasExtra: [],
+        descripcion: []
+      };
 
-      for (const wd of workdayData) {
-        const date = wd.date;
-        const day = parseISO(date);
-        const esDelMes = format(day, 'yyyy-MM') === format(selectedDate, 'yyyy-MM');
-        if (!esDelMes) continue;
+      const diasConRegistro = new Map();
+      for (const entry of workdayData) {
+        const fecha = entry.date;
+        if (!diasConRegistro.has(fecha)) diasConRegistro.set(fecha, []);
+        diasConRegistro.get(fecha).push(entry);
+      }
 
-        diasConRegistro.add(date);
-        if (wd.description) diasConDescripcion.add(date);
-        if (!diasConHoras[date]) diasConHoras[date] = 0;
-        diasConHoras[date] += wd.hours_worked || 0;
+      let rachaActual = 0;
+      let mejorRacha = 0;
 
-        if (wd.status === 'externo') {
+      for (const day of laborables) {
+        const fecha = format(day, 'yyyy-MM-dd');
+        const entradas = diasConRegistro.get(fecha);
+
+        if (!entradas) {
+          resumen.diasSinRegistro++;
+          detallesR.sinRegistro.push({ fecha });
+          rachaActual = 0;
+          continue;
+        }
+
+        const totalHoras = entradas.reduce((sum, e) => sum + (e.hours_worked || 0), 0);
+        const descripciones = entradas.map(e => e.description).filter(Boolean);
+        const externos = entradas.filter(e => e.status === 'externo');
+
+        if (externos.length) {
           resumen.diasExternos++;
-          const causa = wd.description || 'Sin descripción';
-          resumen.causasExternas[causa] = (resumen.causasExternas[causa] || 0) + 1;
-          if (wd.hours_worked === 0) resumen.jornadasCompletasAusencia++;
-
-          diasDetallesExternos.push({
-            fecha: format(new Date(date + 'T00:00:00'), 'dd/MM/yyyy'),
-            causa,
-            horas: wd.hours_worked === 0 ? '8h (completa)' : `${wd.hours_worked}h`
+          externos.forEach(e => {
+            detallesR.externos.push({ fecha, descripcion: e.description || '' });
+            const causa = e.description?.toLowerCase().trim();
+            if (causa) resumen.causasFrecuentes[causa] = (resumen.causasFrecuentes[causa] || 0) + 1;
           });
-        } else {
-          resumen.horasTotalesTrabajadas += wd.hours_worked || 0;
-          if ((wd.hours_worked || 0) > 8) resumen.diasConHorasExtra++;
+          rachaActual = 0;
+          continue;
         }
-      }
 
-      for (const [date, horas] of Object.entries(diasConHoras)) {
-        if (horas === 8) {
+        if (descripciones.length) {
+          resumen.diasConDescripcion++;
+          detallesR.descripcion.push({ fecha, descripciones });
+          descripciones.forEach(desc => {
+            const clave = desc.toLowerCase().trim();
+            resumen.tareasFrecuentes[clave] = (resumen.tareasFrecuentes[clave] || 0) + 1;
+            resumen.horasPorTarea[clave] = (resumen.horasPorTarea[clave] || 0) + entradas.filter(e => e.description?.toLowerCase().trim() === clave).reduce((acc, e) => acc + (e.hours_worked || 0), 0);
+          });
+        }
+
+        if (totalHoras === 8) {
           resumen.diasTrabajadosCompletos++;
-          diasDetallesCompletos.push({
-            fecha: format(new Date(date + 'T00:00:00'), 'dd/MM/yyyy'),
-            horas: '8h'
-          });
-        } else if (horas > 0) {
+          detallesR.completos.push({ fecha, horas: totalHoras });
+        } else if (totalHoras > 0 && totalHoras < 8) {
           resumen.diasTrabajadosParciales++;
+          detallesR.parciales.push({ fecha, horas: totalHoras });
         }
+
+        if (totalHoras > 8) {
+          resumen.diasConHorasExtra++;
+          resumen.horasExtraAcumuladas += (totalHoras - 8);
+          detallesR.horasExtra.push({ fecha, horas: totalHoras });
+        }
+
+        resumen.horasTotalesTrabajadas += totalHoras;
+        rachaActual++;
+        if (rachaActual > mejorRacha) mejorRacha = rachaActual;
       }
 
-      resumen.diasConDescripcion = diasConDescripcion.size;
-      resumen.diasSinRegistro = laborables.filter(d => !diasConRegistro.has(format(d, 'yyyy-MM-dd'))).length;
+      resumen.promedioHorasPorDia = laborables.length ? (resumen.horasTotalesTrabajadas / laborables.length).toFixed(2) : 0;
 
-      const fechasTrabajadas = Object.keys(diasConHoras).sort();
-      let racha = 0;
-      let maxRacha = 0;
-      let anterior = null;
-      for (const fecha of fechasTrabajadas) {
-        const actual = parseISO(fecha);
-        if (anterior && differenceInCalendarWeeks(actual, anterior) === 0 && actual.getDate() === anterior.getDate() + 1) {
-          racha++;
-        } else {
-          racha = 1;
+      let mayorCausa = '', mayorTarea = '', tareaMayor = '';
+      let maxCausa = 0, maxTarea = 0, maxHoras = 0;
+
+      for (const causa in resumen.causasFrecuentes) {
+        if (resumen.causasFrecuentes[causa] > maxCausa) {
+          maxCausa = resumen.causasFrecuentes[causa];
+          mayorCausa = causa;
         }
-        if (racha > maxRacha) maxRacha = racha;
-        anterior = actual;
       }
+      resumen.causaMasFrecuente = mayorCausa;
 
-      resumen.mejorRacha = maxRacha;
-      resumen.promedioHorasPorDia = resumen.totalDiasLaborales > 0
-        ? resumen.horasTotalesTrabajadas / resumen.totalDiasLaborales
-        : 0;
+      for (const tarea in resumen.tareasFrecuentes) {
+        if (resumen.tareasFrecuentes[tarea] > maxTarea) {
+          maxTarea = resumen.tareasFrecuentes[tarea];
+          mayorTarea = tarea;
+        }
+      }
+      resumen.tareaMasFrecuente = mayorTarea;
+
+      for (const tarea in resumen.horasPorTarea) {
+        const total = resumen.horasPorTarea[tarea];
+        if (total > maxHoras) {
+          maxHoras = total;
+          tareaMayor = tarea;
+        }
+      }
+      resumen.tareaMayorDedicacion = tareaMayor;
+      resumen.mejorRacha = mejorRacha;
 
       setStats(resumen);
-      setDiasCompletos(diasDetallesCompletos);
-      setDiasExternos(diasDetallesExternos);
+      setDetalles(detallesR);
     };
 
     fetchStats();
-  }, [selectedDate, holidays]);
+  }, [selectedDate, holidays, userId]);
 
-  const exportToExcel = (rows, filename) => {
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Resumen');
-    XLSX.writeFile(wb, `${filename}.xlsx`);
-  };
+  const showTable = (titulo, rows, keys = ['fecha']) => {
+    if (!rows.length) return Swal.fire(titulo, 'No hay datos.', 'info');
 
-  const showModal = (title, rows, columns = ['Fecha', 'Horas']) => {
-    if (rows.length === 0) {
+    const itemsPerPage = 10;
+    let currentPage = 1;
+    const totalPages = Math.ceil(rows.length / itemsPerPage);
+
+    const formatDate = (fecha) => {
+      try {
+        return format(parseISO(fecha), 'dd/MM/yyyy', { locale: es });
+      } catch {
+        return fecha;
+      }
+    };
+
+    const exportar = () => {
+      const ws = XLSX.utils.json_to_sheet(rows.map(row => {
+        const result = {};
+        keys.forEach(k => {
+          if (k === 'fecha') result[k] = formatDate(row[k]);
+          else if (k === 'horas') result[k] = convertirHoras(row[k]);
+          else result[k] = row[k];
+        });
+        return result;
+      }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, titulo);
+      XLSX.writeFile(wb, `${titulo}.xlsx`);
+    };
+
+    const renderPage = () => {
+      const start = (currentPage - 1) * itemsPerPage;
+      const pageRows = rows.slice(start, start + itemsPerPage);
+      const headers = keys.map(k => `<th>${k.toUpperCase()}</th>`).join('');
+      const body = pageRows.map(r => `<tr>${keys.map(k =>
+        `<td>${k === 'fecha'
+          ? formatDate(r[k])
+          : k === 'horas'
+          ? convertirHoras(r[k])
+          : Array.isArray(r[k])
+          ? r[k].join('<br><hr>')
+          : r[k] || ''}</td>`).join('')}</tr>`).join('');
+
       Swal.fire({
-        title,
-        text: 'No hay datos disponibles para mostrar.',
-        icon: 'info',
-        confirmButtonText: 'Cerrar'
+        title: titulo,
+        showCloseButton: true,
+        html: `
+          <div class="custom-table-container">
+            <table class="custom-table">
+              <thead><tr>${headers}</tr></thead>
+              <tbody>${body}</tbody>
+            </table>
+            <div class="modal-controls">
+              <button ${currentPage === 1 ? 'disabled' : ''} id="prevPage">Anterior</button>
+              <span>Página ${currentPage} de ${totalPages}</span>
+              <button ${currentPage === totalPages ? 'disabled' : ''} id="nextPage">Siguiente</button>
+              <button id="exportBtn">Exportar</button>
+            </div>
+          </div>
+        `,
+        didOpen: () => {
+          document.getElementById('prevPage')?.addEventListener('click', () => {
+            currentPage--;
+            Swal.close();
+            renderPage();
+          });
+          document.getElementById('nextPage')?.addEventListener('click', () => {
+            currentPage++;
+            Swal.close();
+            renderPage();
+          });
+          document.getElementById('exportBtn')?.addEventListener('click', exportar);
+        },
+        showConfirmButton: false,
+        width: '80%',
       });
-      return;
-    }
+    };
 
-    const headers = columns.map(col => `<th style="padding:8px;border-bottom:1px solid #ccc">${col}</th>`).join('');
-    const rowsHtml = rows.map(r =>
-      `<tr>${columns.map(col => `<td style="padding:8px">${r[col.toLowerCase()]}</td>`).join('')}</tr>`
-    ).join('');
-
-    Swal.fire({
-      title,
-      html: `<div style="max-height:60vh; overflow:auto"><table style="width:100%"><thead><tr>${headers}</tr></thead><tbody>${rowsHtml}</tbody></table></div>`,
-      showCancelButton: true,
-      confirmButtonText: 'Exportar Excel',
-      cancelButtonText: 'Cerrar',
-      customClass: { popup: 'custom-swal-popup' },
-      preConfirm: () => exportToExcel(rows, title.replace(/\s+/g, '-'))
-    });
+    renderPage();
   };
 
   return (
     <div className="estadisticas-dashboard">
-      <h2>Estadísticas del Mes</h2>
-
-      <div style={{ fontSize: '0.85rem', marginBottom: '1rem', color: '#888' }}>
-        Debug: Usuario ID: {userId || 'no definido'} | Registros: {workdays.length}
+      <div className="mes-selector">
+        <button onClick={() => setSelectedDate(subMonths(selectedDate, 1))}>{'<'}</button>
+        <h2>Estadísticas de {format(selectedDate, "MMMM 'de' yyyy", { locale: es })}</h2>
+        <button onClick={() => setSelectedDate(addMonths(selectedDate, 1))}>{'>'}</button>
+        <input type="month" onChange={handleMesChange} value={format(selectedDate, 'yyyy-MM')} className="month-picker" />
       </div>
 
       <div className="estadisticas-grid">
         <div className="stat-card"><strong>{stats.totalDiasLaborales}</strong><span>Días Laborales</span></div>
-        <div className="stat-card" onClick={() => showModal('Días Trabajados Completos', diasCompletos)}><strong>{stats.diasTrabajadosCompletos}</strong><span>Trabajados Completos</span></div>
-        <div className="stat-card"><strong>{stats.diasTrabajadosParciales}</strong><span>Trabajados Parciales</span></div>
-        <div className="stat-card" onClick={() => showModal('Días con Causas Externas', diasExternos, ['Fecha', 'Causa', 'Horas'])}><strong>{stats.diasExternos}</strong><span>Días con Causas Externas</span></div>
-        <div className="stat-card"><strong>{stats.jornadasCompletasAusencia}</strong><span>Jornadas Completas de Ausencia</span></div>
-        <div className="stat-card"><strong>{stats.diasSinRegistro}</strong><span>Días Sin Registro</span></div>
-        <div className="stat-card"><strong>{stats.diasConHorasExtra}</strong><span>Días con Horas Extra</span></div>
-        <div className="stat-card"><strong>{stats.mejorRacha}</strong><span>Racha de Trabajo Máxima</span></div>
-        <div className="stat-card"><strong>{stats.promedioHorasPorDia?.toFixed(2)}</strong><span>Promedio Horas/Día</span></div>
-        <div className="stat-card"><strong>{stats.diasConDescripcion}</strong><span>Días con Descripción</span></div>
+        <div className="stat-card" onClick={() => showTable('Días Trabajados con 8 Horas', detalles.completos, ['fecha', 'horas'])}><strong>{stats.diasTrabajadosCompletos}</strong><span>Días con 8 Horas</span></div>
+        <div className="stat-card" onClick={() => showTable('Trabajos Parciales', detalles.parciales, ['fecha', 'horas'])}><strong>{stats.diasTrabajadosParciales}</strong><span>Trabajos Parciales</span></div>
+        <div className="stat-card" onClick={() => showTable('Ausencia - Jornada Completa', detalles.externos, ['fecha', 'descripcion'])}><strong>{stats.diasExternos}</strong><span>Ausencia - Jornada Completa</span></div>
+        <div className="stat-card" onClick={() => showTable('Sin Registro', detalles.sinRegistro)}><strong>{stats.diasSinRegistro}</strong><span>Sin Registro</span></div>
+        <div className="stat-card" onClick={() => showTable('Horas Extra', detalles.horasExtra, ['fecha', 'horas'])}><strong>{stats.diasConHorasExtra}</strong><span>Horas Extra</span></div>
+        <div className="stat-card"><strong>{stats.mejorRacha}</strong><span>Mejor Racha</span></div>
+        <div className="stat-card"><strong>{stats.promedioHorasPorDia}</strong><span>Promedio Horas/Día</span></div>
+        <div className="stat-card" onClick={() => showTable('Descripciones por Día', detalles.descripcion, ['fecha', 'descripciones'])}><strong>{stats.diasConDescripcion}</strong><span>Descripciones</span></div>
+        <div className="stat-card" onClick={() =>
+          showTable("Causas más frecuentes",
+            Object.entries(stats.causasFrecuentes)
+              .sort((a, b) => b[1] - a[1])
+              .map(([causa, cantidad]) => ({ causa, cantidad })),
+            ['causa', 'cantidad'])
+        }><strong>{stats.causaMasFrecuente}</strong><span>Causa + Frecuente</span></div>
+        <div className="stat-card" onClick={() =>
+          showTable("Tareas más frecuentes",
+            Object.entries(stats.tareasFrecuentes)
+              .sort((a, b) => b[1] - a[1])
+              .map(([tarea, cantidad]) => ({ tarea, cantidad })),
+            ['tarea', 'cantidad'])
+        }><strong>{stats.tareaMasFrecuente}</strong><span>Tarea + Frecuente</span></div>
+        <div className="stat-card" onClick={() =>
+          showTable("Horas acumuladas por tarea",
+            Object.entries(stats.horasPorTarea)
+              .sort((a, b) => b[1] - a[1])
+              .map(([tarea, horas]) => ({ tarea, horas })),
+            ['tarea', 'horas'])
+        }><strong>{stats.tareaMayorDedicacion}</strong><span>Tarea Mayor Dedicación</span></div>
       </div>
     </div>
   );

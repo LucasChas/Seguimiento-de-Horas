@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import './Sidebar.css';
 import logo from '../../assets/logo.jpg';
 import AddHolidayModal from '../HolidayModal/AddHolidayModal';
-import { supabase } from '../../supabase/client';
+import { supabase } from '../../../supabase/client';
 
 export default function Sidebar({ onNavigate }) {
   const [isOpen, setIsOpen] = useState(true);

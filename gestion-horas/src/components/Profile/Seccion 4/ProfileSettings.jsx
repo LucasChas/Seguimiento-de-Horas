@@ -1,7 +1,7 @@
 // ProfileSettings.jsx
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
-import { supabase } from '../../../supabase/client';
+import { supabase } from '../../../../supabase/client';
 import './ProfileSettings.css';
 import NotificationSettings from './NotificationSettings';
 

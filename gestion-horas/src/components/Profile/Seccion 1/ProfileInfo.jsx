@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Pencil, Check } from 'lucide-react';
-import { supabase } from '../../../supabase/client';
+import { supabase } from '../../../../supabase/client';
 import UploadAvatarModal from './UploadAvatarModal';
 import defaultAvatar from '../../../assets/PerfilDefecto.png';
 import Swal from 'sweetalert2';

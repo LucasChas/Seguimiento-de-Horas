@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { supabase } from '../../../supabase/client';
+import { supabase } from '../../../../supabase/client';
 import Swal from 'sweetalert2';
 import './Login.css';
 

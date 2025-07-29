@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import './AddHolidayModal.css';
-import { supabase } from '../../supabase/client';
+import { supabase } from '../../../supabase/client';
 
 export default function AddHolidayModal({ onClose, onSubmit }) {
   const [date, setDate] = useState(null);

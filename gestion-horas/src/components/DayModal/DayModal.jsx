@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './Daymodal.css';
 import Swal from 'sweetalert2';
-import { supabase } from '../../supabase/client';
+import { supabase } from '../../../supabase/client';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -154,7 +154,7 @@ const handleSubmit = async () => {
 
       const { error } = await supabase
         .from('workdays')
-        .insert({ date, hours_worked: 0, status: 'externo', description: `${causeName} JornadaCompleta`, user_id });
+        .insert({ date, hours_worked: 0, status: 'externo', description: `${causeName} `, user_id });
 
       if (error) {
         return Swal.fire('Error', 'No se pudo guardar la ausencia.', 'error');

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Pencil, Trash2, Plus } from 'lucide-react';
-import { supabase } from '../../../supabase/client';
+import { supabase } from '../../../../supabase/client';
 import '../Profile.css';
 import Swal from 'sweetalert2';
 import EditCausaModal from './EditCausaModal';
