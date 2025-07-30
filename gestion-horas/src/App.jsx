@@ -7,13 +7,17 @@ import WorkCalendar from './components/Calendar/Calendar';
 import Sidebar from './components/Sidebar/Sidebar';
 import Profile from './components/Profile/Profile';
 import Estadisticas from './components/Estadisticas/Estadistica';
+import { fetchHolidays } from './utils/holidays'; // Asegurate que esta ruta esté bien
+
 function ProtectedRoute({ session, children }) {
   return session ? children : <Navigate to="/login" replace />;
 }
 
 function App() {
   const [session, setSession] = useState(null);
+  const [holidays, setHolidays] = useState([]);
 
+  // Cargar sesión inicial y escuchar cambios
   useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
@@ -25,6 +29,13 @@ function App() {
 
     return () => listener.subscription.unsubscribe();
   }, []);
+
+  // Cargar feriados una vez obtenida la sesión
+  useEffect(() => {
+    if (!session?.user?.id) return;
+    const currentYear = new Date().getFullYear();
+    fetchHolidays(currentYear).then(setHolidays);
+  }, [session?.user?.id]);
 
   return (
     <Router>
@@ -49,7 +60,7 @@ function App() {
           path="/*"
           element={
             <ProtectedRoute session={session}>
-              <MainLayout session={session} />
+              <MainLayout session={session} holidays={holidays} />
             </ProtectedRoute>
           }
         />
@@ -58,7 +69,7 @@ function App() {
   );
 }
 
-function MainLayout({ session }) {
+function MainLayout({ session, holidays }) {
   const navigate = useNavigate();
 
   const handleNavigate = (target) => {
@@ -77,7 +88,15 @@ function MainLayout({ session }) {
       <div style={{ flex: 1, overflow: 'auto', boxSizing: 'border-box', padding: '2rem' }}>
         <Routes>
           <Route path="/calendar" element={<WorkCalendar />} />
-          <Route path="/summary" element={<Estadisticas selectedDate={new Date()} userId={session?.user?.id} />} />
+          <Route
+            path="/summary"
+            element={
+              <Estadisticas
+                userId={session?.user?.id}
+                holidays={holidays.map(h => h.date)} // Solo fechas para Estadisticas
+              />
+            }
+          />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<Navigate to="/calendar" />} />
         </Routes>

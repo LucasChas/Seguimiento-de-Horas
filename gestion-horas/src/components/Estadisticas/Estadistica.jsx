@@ -1,4 +1,4 @@
-// Estadistica.jsx (Actualizado para mostrar tareas y causas más frecuentes con etiquetas descriptivas, y corregir cálculo por suma total de horas)
+// Estadistica.jsx
 import React, { useEffect, useState } from 'react';
 import './Estadistica.css';
 import {
@@ -10,7 +10,6 @@ import {
   parseISO,
   addMonths,
   subMonths,
-  getISOWeek
 } from 'date-fns';
 import { es } from 'date-fns/locale';
 import Swal from 'sweetalert2';
@@ -26,14 +25,35 @@ export default function Estadisticas({ holidays = [], userId }) {
     const [year, month] = e.target.value.split('-');
     setSelectedDate(new Date(year, parseInt(month) - 1, 1));
   };
- const convertirHoras = (h) => {
+
+  const convertirHoras = (h) => {
     const horas = Math.floor(h);
     const minutos = Math.round((h - horas) * 60);
     return `${horas} h ${minutos} min`;
   };
+
+  function normalizarTexto(texto) {
+    return texto
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^\w\s]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
   useEffect(() => {
     const fetchStats = async () => {
       if (!selectedDate || !userId) return;
+
+      Swal.fire({
+        title: 'Cargando estadísticas...',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
 
       const start = startOfMonth(selectedDate);
       const end = endOfMonth(selectedDate);
@@ -95,6 +115,8 @@ export default function Estadisticas({ holidays = [], userId }) {
 
       let rachaActual = 0;
       let mejorRacha = 0;
+      let diasRachaActual = [];
+      let diasMejorRacha = [];
 
       for (const day of laborables) {
         const fecha = format(day, 'yyyy-MM-dd');
@@ -103,6 +125,11 @@ export default function Estadisticas({ holidays = [], userId }) {
         if (!entradas) {
           resumen.diasSinRegistro++;
           detallesR.sinRegistro.push({ fecha });
+          if (rachaActual > mejorRacha) {
+            mejorRacha = rachaActual;
+            diasMejorRacha = [...diasRachaActual];
+          }
+          diasRachaActual = [];
           rachaActual = 0;
           continue;
         }
@@ -115,9 +142,14 @@ export default function Estadisticas({ holidays = [], userId }) {
           resumen.diasExternos++;
           externos.forEach(e => {
             detallesR.externos.push({ fecha, descripcion: e.description || '' });
-            const causa = e.description?.toLowerCase().trim();
+            const causa = normalizarTexto(e.description || '');
             if (causa) resumen.causasFrecuentes[causa] = (resumen.causasFrecuentes[causa] || 0) + 1;
           });
+          if (rachaActual > mejorRacha) {
+            mejorRacha = rachaActual;
+            diasMejorRacha = [...diasRachaActual];
+          }
+          diasRachaActual = [];
           rachaActual = 0;
           continue;
         }
@@ -126,9 +158,12 @@ export default function Estadisticas({ holidays = [], userId }) {
           resumen.diasConDescripcion++;
           detallesR.descripcion.push({ fecha, descripciones });
           descripciones.forEach(desc => {
-            const clave = desc.toLowerCase().trim();
+            const clave = normalizarTexto(desc);
             resumen.tareasFrecuentes[clave] = (resumen.tareasFrecuentes[clave] || 0) + 1;
-            resumen.horasPorTarea[clave] = (resumen.horasPorTarea[clave] || 0) + entradas.filter(e => e.description?.toLowerCase().trim() === clave).reduce((acc, e) => acc + (e.hours_worked || 0), 0);
+            resumen.horasPorTarea[clave] = (resumen.horasPorTarea[clave] || 0) +
+              entradas
+                .filter(e => normalizarTexto(e.description || '') === clave)
+                .reduce((acc, e) => acc + (e.hours_worked || 0), 0);
           });
         }
 
@@ -148,47 +183,39 @@ export default function Estadisticas({ holidays = [], userId }) {
 
         resumen.horasTotalesTrabajadas += totalHoras;
         rachaActual++;
-        if (rachaActual > mejorRacha) mejorRacha = rachaActual;
+        diasRachaActual.push({ fecha });
       }
 
-      resumen.promedioHorasPorDia = laborables.length ? (resumen.horasTotalesTrabajadas / laborables.length).toFixed(2) : 0;
-
-      let mayorCausa = '', mayorTarea = '', tareaMayor = '';
-      let maxCausa = 0, maxTarea = 0, maxHoras = 0;
-
-      for (const causa in resumen.causasFrecuentes) {
-        if (resumen.causasFrecuentes[causa] > maxCausa) {
-          maxCausa = resumen.causasFrecuentes[causa];
-          mayorCausa = causa;
-        }
+      if (rachaActual > mejorRacha) {
+        mejorRacha = rachaActual;
+        diasMejorRacha = [...diasRachaActual];
       }
-      resumen.causaMasFrecuente = mayorCausa;
 
-      for (const tarea in resumen.tareasFrecuentes) {
-        if (resumen.tareasFrecuentes[tarea] > maxTarea) {
-          maxTarea = resumen.tareasFrecuentes[tarea];
-          mayorTarea = tarea;
-        }
-      }
-      resumen.tareaMasFrecuente = mayorTarea;
-
-      for (const tarea in resumen.horasPorTarea) {
-        const total = resumen.horasPorTarea[tarea];
-        if (total > maxHoras) {
-          maxHoras = total;
-          tareaMayor = tarea;
-        }
-      }
-      resumen.tareaMayorDedicacion = tareaMayor;
       resumen.mejorRacha = mejorRacha;
+      detallesR.mejorRacha = diasMejorRacha;
 
+      // ✅ Promedio de horas por día con actividad no externa
+      // Promedio real basado en días hábiles efectivos (laborables - externos - sin registro)
+      const divisorReal = resumen.totalDiasLaborales - resumen.diasExternos - resumen.diasSinRegistro;
+        resumen.promedioHorasPorDia = divisorReal > 0
+          ? (resumen.horasTotalesTrabajadas / divisorReal).toFixed(2)
+          : 0;
+      const causaFrecuente = Object.entries(resumen.causasFrecuentes).sort((a, b) => b[1] - a[1])[0];
+      resumen.causaMasFrecuente = causaFrecuente ? causaFrecuente[0] : '-';
+
+      const tareaFrecuente = Object.entries(resumen.tareasFrecuentes).sort((a, b) => b[1] - a[1])[0];
+      resumen.tareaMasFrecuente = tareaFrecuente ? tareaFrecuente[0] : '-';
+
+      const mayorDedicacion = Object.entries(resumen.horasPorTarea).sort((a, b) => b[1] - a[1])[0];
+      resumen.tareaMayorDedicacion = mayorDedicacion ? mayorDedicacion[0] : '-';
+
+      Swal.close();
       setStats(resumen);
       setDetalles(detallesR);
     };
 
     fetchStats();
   }, [selectedDate, holidays, userId]);
-
   const showTable = (titulo, rows, keys = ['fecha']) => {
     if (!rows.length) return Swal.fire(titulo, 'No hay datos.', 'info');
 
@@ -270,7 +297,7 @@ export default function Estadisticas({ holidays = [], userId }) {
     renderPage();
   };
 
-  return (
+    return (
     <div className="estadisticas-dashboard">
       <div className="mes-selector">
         <button onClick={() => setSelectedDate(subMonths(selectedDate, 1))}>{'<'}</button>
@@ -286,7 +313,7 @@ export default function Estadisticas({ holidays = [], userId }) {
         <div className="stat-card" onClick={() => showTable('Ausencia - Jornada Completa', detalles.externos, ['fecha', 'descripcion'])}><strong>{stats.diasExternos}</strong><span>Ausencia - Jornada Completa</span></div>
         <div className="stat-card" onClick={() => showTable('Sin Registro', detalles.sinRegistro)}><strong>{stats.diasSinRegistro}</strong><span>Sin Registro</span></div>
         <div className="stat-card" onClick={() => showTable('Horas Extra', detalles.horasExtra, ['fecha', 'horas'])}><strong>{stats.diasConHorasExtra}</strong><span>Horas Extra</span></div>
-        <div className="stat-card"><strong>{stats.mejorRacha}</strong><span>Mejor Racha</span></div>
+        <div className="stat-card" onClick={() => showTable('Mejor Racha de Trabajo', detalles.mejorRacha, ['fecha'])}><strong>{stats.mejorRacha}</strong><span>Mejor Racha</span></div>
         <div className="stat-card"><strong>{stats.promedioHorasPorDia}</strong><span>Promedio Horas/Día</span></div>
         <div className="stat-card" onClick={() => showTable('Descripciones por Día', detalles.descripcion, ['fecha', 'descripciones'])}><strong>{stats.diasConDescripcion}</strong><span>Descripciones</span></div>
         <div className="stat-card" onClick={() =>
