@@ -196,10 +196,9 @@ export default function Estadisticas({ holidays = [], userId }) {
 
       // ✅ Promedio de horas por día con actividad no externa
       // Promedio real basado en días hábiles efectivos (laborables - externos - sin registro)
-      const divisorReal = resumen.totalDiasLaborales - resumen.diasExternos - resumen.diasSinRegistro;
-        resumen.promedioHorasPorDia = divisorReal > 0
-          ? (resumen.horasTotalesTrabajadas / divisorReal).toFixed(2)
-          : 0;
+      resumen.promedioHorasPorDia = resumen.totalDiasLaborales > 0
+            ? (resumen.horasTotalesTrabajadas / resumen.totalDiasLaborales).toFixed(2)
+            : 0;
       const causaFrecuente = Object.entries(resumen.causasFrecuentes).sort((a, b) => b[1] - a[1])[0];
       resumen.causaMasFrecuente = causaFrecuente ? causaFrecuente[0] : '-';
 
@@ -315,7 +314,7 @@ export default function Estadisticas({ holidays = [], userId }) {
         <div className="stat-card" onClick={() => showTable('Horas Extra', detalles.horasExtra, ['fecha', 'horas'])}><strong>{stats.diasConHorasExtra}</strong><span>Horas Extra</span></div>
         <div className="stat-card" onClick={() => showTable('Mejor Racha de Trabajo', detalles.mejorRacha, ['fecha'])}><strong>{stats.mejorRacha}</strong><span>Mejor Racha</span></div>
         <div className="stat-card"><strong>{stats.promedioHorasPorDia}</strong><span>Promedio Horas/Día</span></div>
-        <div className="stat-card" onClick={() => showTable('Descripciones por Día', detalles.descripcion, ['fecha', 'descripciones'])}><strong>{stats.diasConDescripcion}</strong><span>Descripciones</span></div>
+        <div className="stat-card" onClick={() => showTable('Descripciones por Día', detalles.descripcion, ['fecha', 'descripciones'])}><strong>{stats.diasConDescripcion}</strong><span>Descripciones por día</span></div>
         <div className="stat-card" onClick={() =>
           showTable("Causas más frecuentes",
             Object.entries(stats.causasFrecuentes)
