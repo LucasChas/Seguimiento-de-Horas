@@ -20,6 +20,45 @@ export default function DayModal({ date, onClose, onSaved }) {
   const [isFullDay, setIsFullDay] = useState(true);
   const [hasChanges, setHasChanges] = useState(false);
 
+
+  //---------------------------------------------------------
+  // 🔄 Dentro del componente, después de los useState existentes
+    const [errorHoras, setErrorHoras] = useState('');
+    const [errorExtras, setErrorExtras] = useState('');
+
+    // ✅ Función que valida el formato ingresado
+    const isFormatoHorasValido = (input) => {
+      if (!input.trim()) return false;
+      const regex = /^(\s*\d{1,2}\s*[hHmM]\s*)+$/;
+      return regex.test(input.trim());
+    };
+
+    // 🔄 Efecto que valida en tiempo real el input de horas trabajadas
+    useEffect(() => {
+      if (!hoursWorked.trim()) {
+        setErrorHoras('');
+        return;
+      }
+      if (!isFormatoHorasValido(hoursWorked)) {
+        setErrorHoras('Formato inválido. Usá el formato Ej: 1h 30m, 2h, 45m');
+      } else {
+        setErrorHoras('');
+      }
+    }, [hoursWorked]);
+
+    // 🔄 Efecto que valida en tiempo real el input de horas extra
+    useEffect(() => {
+      if (!extraHours.trim()) {
+        setErrorExtras('');
+        return;
+      }
+      if (!isFormatoHorasValido(extraHours)) {
+        setErrorExtras('Formato inválido. Usá el formato Ej: 1h 30m, 2h, 45m');
+      } else {
+        setErrorExtras('');
+      }
+    }, [extraHours]);
+
   useEffect(() => {
     fetchEntries();
     fetchCauses();
@@ -347,19 +386,30 @@ return (
             )}
 
             {shouldShowHoursField() && (
-              <label>
-                Cantidad de horas:
-                <input type="text" value={hoursWorked} onChange={(e) => setHoursWorked(e.target.value)} placeholder="Ej: 1h 30m, 45m, 2h" />
-              </label>
+              <>
+                {errorHoras && (
+                  <div className="error-msg">{errorHoras}</div>
+                )}
+                <label>
+                  Cantidad de horas:
+                  <input
+                    type="text"
+                    value={hoursWorked}
+                    onChange={(e) => setHoursWorked(e.target.value)}
+                    placeholder="Ej: 1h 30m, 45m, 2h"
+                  />
+                </label>
+              </>
             )}
           </>
         ) : (
           <>
             {totalWorkedOrAbsent < 8 && !hasFullDayAbsence && (
               <>
-                <label>Horas trabajadas:
-                  <input type="text" value={hoursWorked} onChange={(e) => setHoursWorked(e.target.value)} placeholder="Ej: 1h 30m, 45m, 2h" />
-                </label>
+                {errorHoras && <div className="error-msg">{errorHoras}</div>}
+                  <label>Horas trabajadas:
+                    <input type="text" value={hoursWorked} onChange={(e) => setHoursWorked(e.target.value)} placeholder="Ej: 1h 30m, 45m, 2h" />
+                  </label>
                 <label>Descripción:
                   <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} />
                 </label>
@@ -374,9 +424,10 @@ return (
                 </label>
                 {wantsExtraHours && (
                   <>
-                    <label>Horas extra:
-                      <input type="text" value={extraHours} onChange={(e) => setExtraHours(e.target.value)} placeholder="Ej: 1h, 45m, 0.5h" />
-                    </label>
+                   {errorExtras && <div className="error-msg">{errorExtras}</div>}
+                      <label>Horas extra:
+                        <input type="text" value={extraHours} onChange={(e) => setExtraHours(e.target.value)} placeholder="Ej: 1h 30m, 45m, 2h" />
+                      </label>
                     <label>Descripción:
                       <input type="text" value={extraDescription} onChange={(e) => setExtraDescription(e.target.value)} />
                     </label>
@@ -390,7 +441,13 @@ return (
 
       {hasChanges && (
         <div className="fixed-footer">
-          <button onClick={handleSubmit}>Guardar</button>
+          <button
+            onClick={handleSubmit}
+            disabled={!!errorHoras || !!errorExtras}
+            style={{ opacity: (!!errorHoras || !!errorExtras) ? 0.5 : 1, cursor: (!!errorHoras || !!errorExtras) ? 'not-allowed' : 'pointer' }}
+          >
+            Guardar
+          </button>
         </div>
       )}
     </div>

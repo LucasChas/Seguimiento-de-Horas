@@ -318,3 +318,11 @@ select:focus {
     font-size: 1.6rem;
   }
 }
+
+
+
+.error-msg {
+  color: red;
+  font-size: 0.9em;
+  margin-bottom: 5px;
+}
