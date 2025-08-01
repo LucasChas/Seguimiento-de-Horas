@@ -160,46 +160,91 @@ export default function ProfileSettings({ email }) {
     Swal.fire('Invitación enviada', `Se envió un correo a ${inviteEmail}`, 'success');
   }
 
-  async function handleEliminarCuenta() {
-    const { value: password } = await Swal.fire({
-      title: 'Confirmar eliminación',
-      html: `
-        <div style="position:relative;">
-          <input id="swal-delete-pass" class="swal2-input" placeholder="Contraseña" type="password" style="padding-right:2.5rem;"/>
-          <span id="emoji-delete" style="position:absolute;top:50%;right:15px;transform:translateY(-50%);cursor:pointer;">👁️</span>
-        </div>`,
-      didOpen: () => handlePasswordToggle('swal-delete-pass', 'emoji-delete'),
-      showCancelButton: true,
-      confirmButtonText: 'Eliminar',
-      preConfirm: () => {
-        const pwd = document.getElementById('swal-delete-pass').value;
-        if (!pwd) return Swal.showValidationMessage('La contraseña es obligatoria');
-        return pwd;
-      }
-    });
-
-    if (!password) return;
-
-    const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
-    if (authError) return Swal.fire('Error', 'Contraseña incorrecta', 'error');
-
-    const response = await fetch('https://mcrdacssebaldbevaybu.supabase.co/functions/v1/delete-user', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ user_id: data.user.id })
-    });
-
-    const result = await response.json();
-    if (!response.ok) {
-      console.error(result);
-      return Swal.fire('Error', result.error || 'No se pudo eliminar la cuenta', 'error');
+async function handleEliminarCuenta() {
+  const { value: password } = await Swal.fire({
+    title: 'Confirmar con tu contraseña',
+    html: `
+      <div style="position:relative;">
+        <input id="swal-delete-pass" class="swal2-input" placeholder="Contraseña" type="password" style="padding-right:2.5rem;"/>
+        <span id="emoji-delete" style="position:absolute;top:50%;right:15px;transform:translateY(-50%);cursor:pointer;">👁️</span>
+      </div>`,
+    didOpen: () => handlePasswordToggle('swal-delete-pass', 'emoji-delete'),
+    showCancelButton: true,
+    confirmButtonText: 'Continuar',
+    preConfirm: () => {
+      const pwd = document.getElementById('swal-delete-pass').value;
+      if (!pwd) return Swal.showValidationMessage('La contraseña es obligatoria');
+      return pwd;
     }
+  });
 
-    await supabase.auth.signOut();
-    Swal.fire('Cuenta eliminada', 'Tu cuenta fue eliminada correctamente.', 'success').then(() => {
-      window.location.href = '/login';
+  if (!password) return;
+
+  const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
+  if (authError) {
+    return Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'Contraseña incorrecta'
     });
   }
+
+  // Confirmación final de eliminación
+  const swalWithBootstrapButtons = Swal.mixin({
+    customClass: {
+      confirmButton: "btn btn-success",
+      cancelButton: "btn btn-danger"
+    },
+    buttonsStyling: false
+  });
+
+  const result = await swalWithBootstrapButtons.fire({
+    title: "¿Estás seguro?",
+    text: "Esta acción es irreversible. Se eliminará tu cuenta y todos tus datos.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Sí, eliminar",
+    cancelButtonText: "No, cancelar",
+    reverseButtons: true
+  });
+
+  if (!result.isConfirmed) {
+    return swalWithBootstrapButtons.fire(
+      "Cancelado",
+      "Tu cuenta sigue activa.",
+      "error"
+    );
+  }
+
+  // Eliminación real
+  const response = await fetch('https://mcrdacssebaldbevaybu.supabase.co/functions/v1/delete-user', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user_id: data.user.id })
+  });
+
+  const resultDel = await response.json();
+
+  if (!response.ok) {
+    console.error(resultDel);
+    return swalWithBootstrapButtons.fire(
+      "Error",
+      resultDel.error || "No se pudo eliminar la cuenta.",
+      "error"
+    );
+  }
+
+  await supabase.auth.signOut();
+
+  swalWithBootstrapButtons.fire(
+    "¡Cuenta eliminada!",
+    "Tu cuenta fue eliminada correctamente.",
+    "success"
+  ).then(() => {
+    window.location.href = '/login';
+  });
+}
+
 
   async function handleChangePassword() {
     const { value: currentPassword } = await Swal.fire({
@@ -258,40 +303,40 @@ export default function ProfileSettings({ email }) {
     Swal.fire('Listo', 'Tu contraseña fue actualizada', 'success');
   }
 
-  return (
-    <div className="settings-section">
-      <div className="settings-grid">
-        <div className="settings-card email">
-          <h3 className='h3-settings'>Cambiar Email</h3>
-          <div className="settings-row">
-            <input type="email" value={email} readOnly />
-            <button className="settings-btn" onClick={handleChangeEmail}>Cambiar email</button>
-          </div>
+ return (
+  <div className="settings-section">
+    <div className="settings-grid">
+      <div className="settings-card password">
+        <h3 className='h3-settings'>Cambiar Contraseña</h3>
+        <div className="settings-row">
+          <input type="password" value="********" readOnly />
+          <button className="settings-btn" onClick={handleChangePassword}>Cambiar contraseña</button>
         </div>
+      </div>
 
-        <div className="settings-card password">
-          <h3 className='h3-settings'>Cambiar Contraseña</h3>
-          <div className="settings-row">
-            <input type="password" value="********" readOnly />
-            <button className="settings-btn" onClick={handleChangePassword}>Cambiar contraseña</button>
-          </div>
+      <div className="settings-card email">
+        <h3 className='h3-settings'>Cambiar Email</h3>
+        <div className="settings-row">
+          <input type="email" value={email} readOnly />
+          <button className="settings-btn" onClick={handleChangeEmail}>Cambiar email</button>
         </div>
+      </div>
 
-        {userId && <NotificationSettings userId={userId} email={email} />}
+      <div className="settings-card delete">
+        <h3 className='h3-settings'>Eliminar cuenta</h3>
+        <p className="settings-note">Esta acción es irreversible. Todos tus datos serán eliminados.</p>
+        <button className="settings-btn danger" onClick={handleEliminarCuenta}>Eliminar cuenta</button>
+      </div>
 
-        <div className="settings-card invite">
-          <h3>Invitar a Usuarios</h3>
-          <div className="settings-row">
-            <button className="settings-btn" onClick={handleInviteUser}>Invitar nuevo usuario</button>
-          </div>
-        </div>
+      {userId && <NotificationSettings userId={userId} email={email} />}
 
-        <div className="settings-card delete">
-          <h3 className='h3-settings'>Eliminar cuenta</h3>
-          <p className="settings-note">Esta acción es irreversible. Todos tus datos serán eliminados.</p>
-          <button className="settings-btn danger" onClick={handleEliminarCuenta}>Eliminar cuenta</button>
+      <div className="settings-card invite">
+        <h3>Invitar a Usuarios</h3>
+        <div className="settings-row">
+          <button className="settings-btn" onClick={handleInviteUser}>Invitar nuevo usuario</button>
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 }
