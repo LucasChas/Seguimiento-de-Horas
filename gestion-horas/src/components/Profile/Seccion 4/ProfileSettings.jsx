@@ -100,7 +100,11 @@ export default function ProfileSettings({ email }) {
 
     if (!newEmail || newEmail === email) return;
 
-    const { error: updateErr } = await supabase.auth.updateUser({ data: {}, email: String(newEmail) });
+    const { error: updateErr } = await supabase.auth.updateUser({
+        email: String(newEmail),
+        options: { emailRedirectTo: 'http://localhost:5173/login' }
+      });
+
 
     if (updateErr) {
       return Swal.fire({ icon: 'error', title: 'Error', text: updateErr.message });
@@ -244,7 +248,7 @@ async function handleEliminarCuenta() {
     window.location.href = '/login';
   });
 }
-
+v
 
   async function handleChangePassword() {
     const { value: currentPassword } = await Swal.fire({
