@@ -288,3 +288,26 @@
   color: #0d47a1;
   font-weight: bold;
 }
+
+
+.export-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+/* Botón PDF (a la par del botón Excel existente) */
+.export-pdf-button {
+  padding: 0.6rem 1.2rem;
+  background-color: #0d47a1; /* azul */
+  color: white;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.export-pdf-button:hover {
+  background-color: #08306b;
+}

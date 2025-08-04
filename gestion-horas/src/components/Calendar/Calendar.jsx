@@ -1,6 +1,8 @@
 // src/components/Calendar/Calendar.jsx
 
 import React, { useEffect, useState } from 'react';
+import appLogo from '../../assets/logo.jpg';
+
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import { fetchHolidays } from '../../utils/holidays';
@@ -186,6 +188,31 @@ export default function WorkCalendar() {
     ? Math.min(100, Math.round((loaded / expected) * 100))
     : 0;
 
+
+  //TRAIGO EL USUARIO:
+  const [userData, setUserData] = useState({ name: '', email: '' });
+
+useEffect(() => {
+  (async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('nombre, apellido, email')
+      .eq('id', user.id)
+      .single();
+
+    const fullName = profile?.nombre && profile?.apellido
+      ? `${profile.nombre} ${profile.apellido}`
+      : user.user_metadata?.full_name || 'Usuario';
+
+    const email = profile?.email || user.email || '';
+
+    setUserData({ name: fullName, email });
+  })();
+}, []);
+
   return (
     <div style={{ display: 'flex', alignItems: 'flex-start' }}>
       <div>
@@ -225,10 +252,13 @@ export default function WorkCalendar() {
       </div>
 
       <MonthSummary
-        holidays={holidayDates}
-        workdays={workdays}
-        selectedDate={currentMonth}
-      />
+          workdays={workdays}
+          monthDate={currentMonth}
+          holidays={holidays}
+          currentUser={userData}      // { name, email }
+          appLogo={appLogo}           // importado o DataURL
+        />
+
     </div>
   );
 }

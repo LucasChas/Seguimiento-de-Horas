@@ -1,4 +1,3 @@
-// ... imports
 import React, { useEffect, useState } from 'react';
 import './MonthSummary.css';
 import {
@@ -14,16 +13,19 @@ import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import * as XLSX from 'xlsx';
 
+// IMPORT CORRECTO hacia utils
+import { generateMonthSummaryPDF } from '../../utils/pdfReport';
+
 const MySwal = withReactContent(Swal);
 const COLORS = ['#94d3a2', '#ff9800', '#e0e0e0'];
 
 const formatHoras = (hs) => {
-  const totalMinutes = Math.round(hs * 60);
-  const horas = Math.floor(totalMinutes / 60);
-  const minutos = totalMinutes % 60;
-  if (horas > 0 && minutos > 0) return `${horas}h ${minutos}m`;
-  if (horas > 0) return `${horas}h`;
-  return `${minutos}m`;
+  const totalMin = Math.round(Number(hs || 0) * 60);
+  const horas = Math.floor(totalMin / 60);
+  const minutos = totalMin % 60;
+  if (horas > 0 && minutos > 0) return `${horas} hs. ${minutos} min.`;
+  if (horas > 0) return `${horas} hs.`;
+  return `${minutos} min.`;
 };
 
 const exportToExcel = (rows, filename, sheetName = 'Hoja1') => {
@@ -51,25 +53,25 @@ const exportMultipleToExcel = (dataMap, filename) => {
   XLSX.writeFile(wb, `${filename}.xlsx`);
 };
 
-
-export default function MonthSummary({ workdays, selectedDate, holidays = [] }) {
+export default function MonthSummary({ workdays, monthDate, holidays = [], currentUser, appLogo }) {
   const [expectedHours, setExpectedHours] = useState(0);
   const [loadedHours, setLoadedHours] = useState(0);
   const [pieData, setPieData] = useState([]);
   const [details, setDetails] = useState({ trabajados: [], externos: [], restantes: [] });
 
   useEffect(() => {
-    if (!selectedDate) return;
-
-    const start = startOfMonth(selectedDate);
-    const end = endOfMonth(selectedDate);
+    const baseDate = monthDate instanceof Date ? monthDate : new Date(monthDate || Date.now());
+    const start = startOfMonth(baseDate);
+    const end = endOfMonth(baseDate);
     const allDays = eachDayOfInterval({ start, end });
+
     const holidaySet = new Set(holidays);
-    const monthKey = format(selectedDate, 'yyyy-MM');
+    const monthKey = format(baseDate, 'yyyy-MM');
 
     const laborables = allDays.filter(day => {
       const iso = format(day, 'yyyy-MM-dd');
-      return !isWeekend(day) && !holidaySet.has(iso);
+      const esFinde = day.getDay() === 0 || day.getDay() === 6;
+      return !esFinde && !holidaySet.has(iso);
     });
 
     setExpectedHours(laborables.length * 8);
@@ -131,99 +133,95 @@ export default function MonthSummary({ workdays, selectedDate, holidays = [] }) 
       { name: 'Restantes', value: remainingList.length }
     ]);
     setDetails({ trabajados: workedList, externos: externalList, restantes: remainingList });
-  }, [workdays, selectedDate, holidays]);
+  }, [workdays, monthDate, holidays]);
 
   const showPaginatedModal = (title, rows) => {
-  const pageSize = 5;
-  let currentPage = 1;
-  const totalPages = Math.ceil(rows.length / pageSize);
+    const pageSize = 5;
+    let currentPage = 1;
+    const totalPages = Math.ceil(rows.length / pageSize);
 
-  const generateTableHTML = () => {
-    const start = (currentPage - 1) * pageSize;
-    const pageItems = rows.slice(start, start + pageSize);
-    return `
-      <div class="month-summary-modal">
-        <!-- X de cierre -->
-        <button id="modalCloseX" class="close-icon">×</button>
+    const generateTableHTML = () => {
+      const start = (currentPage - 1) * pageSize;
+      const pageItems = rows.slice(start, start + pageSize);
+      return `
+        <div class="month-summary-modal">
+          <button id="modalCloseX" class="close-icon">×</button>
 
-        <h3>${title}</h3>
-        <div class="table-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>Fecha</th>
-                <th>Causa</th>
-                <th>Horas</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${pageItems.map(r => `
+          <h3>${title}</h3>
+          <div class="table-scroll">
+            <table>
+              <thead>
                 <tr>
-                  <td>${r.fecha}</td>
-                  <td>
-                    <ul class="causa-list">
-                      ${r.causa
-                        .split('\n')
-                        .filter(Boolean)
-                        .map(desc => `<li>${desc}</li>`)
-                        .join('')}
-                    </ul>
-                  </td>
-
-                  <td>${r.horas}</td>
+                  <th>Fecha</th>
+                  <th>Causa</th>
+                  <th>Horas</th>
                 </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-
-        <div class="modal-controls">
-          <button id="exportExcel" class="pagination-button">Exportar Excel</button>
-          <div class="pagination">
-            <button id="prevPage" ${currentPage === 1 ? 'disabled' : ''} class="pagination-button">← Anterior</button>
-            <span class="pagination-info">Página ${currentPage} de ${totalPages}</span>
-            <button id="nextPage" ${currentPage === totalPages ? 'disabled' : ''} class="pagination-button">Siguiente →</button>
+              </thead>
+              <tbody>
+                ${pageItems.map(r => `
+                  <tr>
+                    <td>${r.fecha}</td>
+                    <td>
+                      <ul class="causa-list">
+                        ${String(r.causa || '')
+                          .split('\n')
+                          .filter(Boolean)
+                          .map(desc => `<li>${desc}</li>`)
+                          .join('')}
+                      </ul>
+                    </td>
+                    <td>${r.horas}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
           </div>
-          <!-- Nota: se elimina el botón Cerrar de aquí -->
-        </div>
-      </div>
-    `;
-  };
 
-  MySwal.fire({
-    html: generateTableHTML(),
-    showConfirmButton: false,
-    customClass: { popup: 'custom-swal-popup' },
-    heightAuto: false,
-    didOpen: () => {
-      const container = Swal.getHtmlContainer();
-      const attach = () => {
-        container.querySelector('#prevPage')?.addEventListener('click', () => {
-          if (currentPage > 1) {
-            currentPage--;
-            container.innerHTML = generateTableHTML();
-            attach();
-          }
-        });
-        container.querySelector('#nextPage')?.addEventListener('click', () => {
-          if (currentPage < totalPages) {
-            currentPage++;
-            container.innerHTML = generateTableHTML();
-            attach();
-          }
-        });
-        container.querySelector('#exportExcel')?.addEventListener('click', () => {
-          exportToExcel(rows, `Resumen-${title}`);
-        });
-        // Evento de cierre con la X
-        container.querySelector('#modalCloseX')?.addEventListener('click', () => {
-          Swal.close();
-        });
-      };
-      attach();
-    }
-  });
-};
+          <div class="modal-controls">
+            <button id="exportExcel" class="pagination-button">Exportar Excel</button>
+            <div class="pagination">
+              <button id="prevPage" ${currentPage === 1 ? 'disabled' : ''} class="pagination-button">← Anterior</button>
+              <span class="pagination-info">Página ${currentPage} de ${totalPages}</span>
+              <button id="nextPage" ${currentPage === totalPages ? 'disabled' : ''} class="pagination-button">Siguiente →</button>
+            </div>
+          </div>
+        </div>
+      `;
+    };
+
+    MySwal.fire({
+      html: generateTableHTML(),
+      showConfirmButton: false,
+      customClass: { popup: 'custom-swal-popup' },
+      heightAuto: false,
+      didOpen: () => {
+        const container = Swal.getHtmlContainer();
+        const attach = () => {
+          container.querySelector('#prevPage')?.addEventListener('click', () => {
+            if (currentPage > 1) {
+              currentPage--;
+              container.innerHTML = generateTableHTML();
+              attach();
+            }
+          });
+          container.querySelector('#nextPage')?.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+              currentPage++;
+              container.innerHTML = generateTableHTML();
+              attach();
+            }
+          });
+          container.querySelector('#exportExcel')?.addEventListener('click', () => {
+            exportToExcel(rows, `Resumen-${title}`);
+          });
+          container.querySelector('#modalCloseX')?.addEventListener('click', () => {
+            Swal.close();
+          });
+        };
+        attach();
+      }
+    });
+  };
 
   const handleSectorClick = (entry) => {
     const key = entry.name.toLowerCase();
@@ -235,6 +233,22 @@ export default function MonthSummary({ workdays, selectedDate, holidays = [] }) 
 
   const handleExportGeneral = () => {
     exportMultipleToExcel(details, 'Resumen-completo');
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      await generateMonthSummaryPDF({
+        details,
+        selectedDate: monthDate,
+        userName: currentUser?.name || '',
+        userEmail: currentUser?.email || '',
+        logoSrc: appLogo,
+        expectedHours,
+        loadedHours
+      });
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   return (
@@ -268,7 +282,15 @@ export default function MonthSummary({ workdays, selectedDate, holidays = [] }) 
           </PieChart>
         </ResponsiveContainer>
       </div>
-      <button className="export-all-button" onClick={handleExportGeneral}>Exportar Todo a Excel</button>
+
+      <div className="export-actions">
+        <button className="export-all-button" onClick={handleExportGeneral}>
+          Exportar Todo a Excel
+        </button>
+        <button className="export-pdf-button" onClick={handleExportPDF}>
+          Exportar Resumen a PDF
+        </button>
+      </div>
     </div>
   );
 }
