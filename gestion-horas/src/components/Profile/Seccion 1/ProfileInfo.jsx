@@ -175,7 +175,7 @@ export default function ProfileInfo() {
           <div className="meta-info">
             <p><strong>Último ingreso:</strong> {metadata.lastSignIn}</p>
             <p><strong>Cuenta creada:</strong> {metadata.createdAt}</p>
-            <p><strong>Versión del sistema:</strong> 1.0.0 TTS</p>
+            <p><strong>Versión del sistema:</strong> 1.1.3 TTS - Local</p>
           </div>
         </div>
       </div>

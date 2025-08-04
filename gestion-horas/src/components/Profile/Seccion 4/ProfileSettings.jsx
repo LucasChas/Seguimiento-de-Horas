@@ -248,7 +248,7 @@ async function handleEliminarCuenta() {
     window.location.href = '/login';
   });
 }
-v
+
 
   async function handleChangePassword() {
     const { value: currentPassword } = await Swal.fire({
