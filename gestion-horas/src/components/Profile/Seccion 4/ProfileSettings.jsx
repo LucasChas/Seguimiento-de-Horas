@@ -110,8 +110,11 @@ export default function ProfileSettings({ email }) {
       return Swal.fire({ icon: 'error', title: 'Error', text: updateErr.message });
     }
 
-    Swal.fire('Listo', 'Te enviamos un correo de confirmación. El mismo sera enviado a ambos emails como metodo de verificacíon', 'success');
-  }
+    Swal.fire(
+  '¡Listo!',
+  'Te enviamos un correo de confirmación a ambas direcciones (la actual y la nueva). Recordá que debés confirmar el cambio desde ambos correos para que sea efectivo.',
+  'success'
+);}
 
   async function  handleInviteUser() {
     const { value: inviteEmail } = await Swal.fire({
