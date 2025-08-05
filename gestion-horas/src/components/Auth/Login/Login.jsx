@@ -1,8 +1,10 @@
+// src/components/Auth/Login/Login.jsx
 import React, { useState } from 'react';
 import { supabase } from '../../../../supabase/client';
 import Swal from 'sweetalert2';
 import './Login.css';
 import { useNavigate } from 'react-router-dom';
+
 export default function Login({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -11,10 +13,10 @@ export default function Login({ onLogin }) {
   const [intentosFallidos, setIntentosFallidos] = useState(0);
   const [bloqueadoHasta, setBloqueadoHasta] = useState(null);
   const navigate = useNavigate();
+
   const handleLogin = async (e) => {
     e.preventDefault();
 
-    // Verifica si está bloqueado
     if (bloqueadoHasta && new Date() < bloqueadoHasta) {
       const segundos = Math.ceil((bloqueadoHasta - new Date()) / 1000);
       return Swal.fire('Demasiados intentos', `Esperá ${segundos} segundos antes de volver a intentar.`, 'warning');
@@ -28,7 +30,6 @@ export default function Login({ onLogin }) {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
 
-      // Reset de intentos si inicia sesión correctamente
       setIntentosFallidos(0);
       setBloqueadoHasta(null);
 
@@ -39,9 +40,8 @@ export default function Login({ onLogin }) {
       setIntentosFallidos(nuevosIntentos);
 
       if (nuevosIntentos >= 5) {
-        setBloqueadoHasta(new Date(new Date().getTime() + 60 * 1000)); // 1 minuto
+        setBloqueadoHasta(new Date(new Date().getTime() + 60 * 1000));
         setIntentosFallidos(0);
-
         return Swal.fire('Demasiados intentos', 'Tu cuenta está temporalmente bloqueada por 1 minuto.', 'error');
       }
 
@@ -82,8 +82,13 @@ export default function Login({ onLogin }) {
 
         <button type="submit">Ingresar</button>
 
+        
+
         <p className="auth-toggle">
           ¿No tenés cuenta? <span onClick={() => navigate('/register')}>Registrate acá</span>
+        </p>
+        <p className="auth-small-link" onClick={() => navigate('/recover')}>
+          ¿Olvidaste tu contraseña?
         </p>
       </form>
     </div>

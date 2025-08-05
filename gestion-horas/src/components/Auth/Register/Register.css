@@ -174,3 +174,9 @@
   border-width: 8px 8px 8px 0;
   border-color: transparent #ccc transparent transparent;
 }
+
+.password-container{
+  position: relative;
+  display: block;             /* igual que el fix global */
+  align-items: initial;
+}

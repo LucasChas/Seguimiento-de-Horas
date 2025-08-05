@@ -2,8 +2,12 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase/client';
+
 import Login from './components/Auth/Login/Login';
 import Register from './components/Auth/Register/Register';
+import RecoverPassword from './components/Auth/Login/RecoverPassword';
+import ResetPassword from './components/Auth/Login/ResetPassword';
+
 import WorkCalendar from './components/Calendar/Calendar';
 import Sidebar from './components/Sidebar/Sidebar';
 import Profile from './components/Profile/Profile';
@@ -17,26 +21,25 @@ function ProtectedRoute({ session, children }) {
 function App() {
   const [session, setSession] = useState(null);
   const [holidays, setHolidays] = useState([]);
-  const [allowRegister, setAllowRegister] = useState(false); // 👈 NUEVO
+  const [allowRegister, setAllowRegister] = useState(false);
 
-  // Escuchar sesión
+  // Escuchar cambios de sesión y cargar sesión inicial
   useEffect(() => {
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, s) => setSession(s));
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  // Detectar flujo de invitación para NO redirigir fuera de /register
+  // NO borrar el hash (#access_token&type=recovery). Supabase lo necesita para crear la sesión.
+
+  // Permitir /register sólo para flujos de invitación (no para recovery)
   useEffect(() => {
     const qs = new URLSearchParams(window.location.search);
     const hash = new URLSearchParams(window.location.hash.replace('#', ''));
-    const type = hash.get('type');
     const invited = qs.has('invited');
-    // Si llega con ?invited o con token de invitación/recovery, dejamos pasar a /register
-    setAllowRegister(invited || type === 'recovery' || type === 'invite');
-  }, [window.location.search, window.location.hash]);
+    const isInvite = hash.get('type') === 'invite';
+    setAllowRegister(invited || isInvite);
+  }, []);
 
   // Cargar feriados cuando haya sesión
   useEffect(() => {
@@ -59,10 +62,15 @@ function App() {
           }
         />
 
+        {/* Solicitar enlace de recuperación */}
+        <Route path="/recover" element={<RecoverPassword />} />
+
+        {/* Establecer nueva contraseña (llega desde el mail con token en el hash) */}
+        <Route path="/reset" element={<ResetPassword />} />
+
         <Route
           path="/register"
           element={
-            // 👇 Si es flujo de invitación, NO redirijas aunque haya sesión
             allowRegister ? (
               <Register switchToLogin={() => (window.location.href = '/login')} />
             ) : session ? (
@@ -88,6 +96,7 @@ function App() {
 
 function MainLayout({ session, holidays }) {
   const navigate = useNavigate();
+
   const handleNavigate = (target) => {
     if (target === 'logout') {
       supabase.auth.signOut().then(() => (window.location.href = '/login'));
