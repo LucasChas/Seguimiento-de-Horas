@@ -65,14 +65,17 @@ export default function MonthSummary({ workdays, monthDate, holidays = [], curre
     const end = endOfMonth(baseDate);
     const allDays = eachDayOfInterval({ start, end });
 
-    const holidaySet = new Set(holidays);
+    const holidaySet = new Set(
+    (holidays || [])
+      .map(h => (typeof h === 'string' ? h : h?.date))
+      .filter(Boolean)
+      );
     const monthKey = format(baseDate, 'yyyy-MM');
 
     const laborables = allDays.filter(day => {
-      const iso = format(day, 'yyyy-MM-dd');
-      const esFinde = day.getDay() === 0 || day.getDay() === 6;
-      return !esFinde && !holidaySet.has(iso);
-    });
+    const iso = format(day, 'yyyy-MM-dd');
+    return !isWeekend(day) && !holidaySet.has(iso);
+  });
 
     setExpectedHours(laborables.length * 8);
 

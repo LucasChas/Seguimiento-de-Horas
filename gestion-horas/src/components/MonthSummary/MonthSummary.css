@@ -290,10 +290,22 @@
 }
 
 
+/* Alineación vertical perfecta de ambos botones */
 .export-actions {
   display: flex;
+  align-items: center;   /* centra verticalmente los hijos */
   gap: 0.75rem;
-  margin-top: 1rem;
+  margin-top: 1rem;      /* el margen va en el contenedor */
+}
+
+/* Anula el margin-top individual del botón de Excel */
+.export-actions .export-all-button {
+  margin-top: 0 !important;
+}
+
+/* Por simetría, aseguramos lo mismo en el de PDF */
+.export-actions .export-pdf-button {
+  margin-top: 0 !important;
 }
 
 /* Botón PDF (a la par del botón Excel existente) */
@@ -310,4 +322,30 @@
 }
 .export-pdf-button:hover {
   background-color: #08306b;
+}
+
+
+/* Igualar tamaño de los dos botones de exportación */
+.export-actions .export-all-button,
+.export-actions .export-pdf-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;           /* misma altura */
+  min-width: 220px;       /* mismo ancho mínimo */
+  padding: 0 1.4rem;      /* mismo padding lateral */
+  font-size: 0.95rem;     /* misma tipografía */
+  border-radius: 10px;    /* mismo borde */
+}
+
+/* (Opcional) en pantallas chicas que ocupen todo el ancho */
+@media (max-width: 768px) {
+  .export-actions {
+    flex-direction: column;
+  }
+  .export-actions .export-all-button,
+  .export-actions .export-pdf-button {
+    width: 100%;
+    min-width: 0;
+  }
 }

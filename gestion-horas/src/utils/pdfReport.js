@@ -51,8 +51,8 @@ async function loadImageAsDataURL(src) {
 export async function generateMonthSummaryPDF({
   details,
   selectedDate,
-  userName,      // <- nombre real
-  userEmail,     // <- email real
+  userName,      // nombre real (opcional)
+  userEmail,     // email real (opcional)
   logoSrc = null,
   expectedHours = null,
   loadedHours = null
@@ -99,6 +99,7 @@ export async function generateMonthSummaryPDF({
   resumen.forEach((line) => { cursorY += 14; doc.text(`• ${line}`, marginX, cursorY); });
   cursorY += 18;
 
+  // --- Tabla: Trabajados ---
   doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
   doc.text('Días trabajados', marginX, cursorY);
   cursorY += 8;
@@ -107,7 +108,7 @@ export async function generateMonthSummaryPDF({
     startY: cursorY,
     margin: { left: marginX, right: marginX },
     styles: { font: 'helvetica', fontSize: 9, cellPadding: 5, overflow: 'linebreak' },
-    headStyles: { fillColor: [27, 94, 32] },
+    headStyles: { fillColor: [27, 94, 32] }, // verde
     head: [['Fecha', 'Horas', 'Causa']],
     body: (details?.trabajados || []).map(r => [r.fecha, r.horas, r.causa || '-']),
     didDrawPage: () => {
@@ -117,6 +118,7 @@ export async function generateMonthSummaryPDF({
     }
   });
 
+  // --- Tabla: Pendientes ---
   let nextY = doc.lastAutoTable?.finalY ? doc.lastAutoTable.finalY + 24 : cursorY + 40;
   doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
   doc.text('Días pendientes (sin registro)', marginX, nextY);
@@ -125,7 +127,7 @@ export async function generateMonthSummaryPDF({
     startY: nextY + 8,
     margin: { left: marginX, right: marginX },
     styles: { font: 'helvetica', fontSize: 9, cellPadding: 5 },
-    headStyles: { fillColor: [25, 118, 210] },
+    headStyles: { fillColor: [25, 118, 210] }, // azul
     head: [['Fecha', 'Estado']],
     body: (details?.restantes || []).map(r => [r.fecha, 'Sin registro']),
     didDrawPage: () => {
@@ -135,10 +137,25 @@ export async function generateMonthSummaryPDF({
     }
   });
 
+  // --- Conteo y Tabla: Externos ---
   nextY = doc.lastAutoTable?.finalY ? doc.lastAutoTable.finalY + 24 : undefined;
   if (typeof nextY === 'number') {
     doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
     doc.text(`Causas externas — Total: ${externosCount}`, marginX, nextY);
+
+    autoTable(doc, {
+      startY: nextY + 8,
+      margin: { left: marginX, right: marginX },
+      styles: { font: 'helvetica', fontSize: 9, cellPadding: 5 },
+      headStyles: { fillColor: [255, 152, 0] }, // naranja
+      head: [['Fecha', 'Horas', 'Causa']],
+      body: (details?.externos || []).map(r => [r.fecha, r.horas, r.causa || '-']),
+      didDrawPage: () => {
+        const str = `Página ${doc.internal.getNumberOfPages()}`;
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(9);
+        doc.text(str, pageWidth / 2, doc.internal.pageSize.getHeight() - 20, { align: 'center' });
+      }
+    });
   }
 
   const yyyy = monthDate.getFullYear();
