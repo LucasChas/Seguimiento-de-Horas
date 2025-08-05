@@ -1,3 +1,4 @@
+// App.jsx
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabase/client';
@@ -7,7 +8,7 @@ import WorkCalendar from './components/Calendar/Calendar';
 import Sidebar from './components/Sidebar/Sidebar';
 import Profile from './components/Profile/Profile';
 import Estadisticas from './components/Estadisticas/Estadistica';
-import { fetchHolidays } from './utils/holidays'; // Asegurate que esta ruta esté bien
+import { fetchHolidays } from './utils/holidays';
 
 function ProtectedRoute({ session, children }) {
   return session ? children : <Navigate to="/login" replace />;
@@ -16,21 +17,28 @@ function ProtectedRoute({ session, children }) {
 function App() {
   const [session, setSession] = useState(null);
   const [holidays, setHolidays] = useState([]);
+  const [allowRegister, setAllowRegister] = useState(false); // 👈 NUEVO
 
-  // Cargar sesión inicial y escuchar cambios
+  // Escuchar sesión
   useEffect(() => {
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
     });
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-
+    supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  // Cargar feriados una vez obtenida la sesión
+  // Detectar flujo de invitación para NO redirigir fuera de /register
+  useEffect(() => {
+    const qs = new URLSearchParams(window.location.search);
+    const hash = new URLSearchParams(window.location.hash.replace('#', ''));
+    const type = hash.get('type');
+    const invited = qs.has('invited');
+    // Si llega con ?invited o con token de invitación/recovery, dejamos pasar a /register
+    setAllowRegister(invited || type === 'recovery' || type === 'invite');
+  }, [window.location.search, window.location.hash]);
+
+  // Cargar feriados cuando haya sesión
   useEffect(() => {
     if (!session?.user?.id) return;
     const currentYear = new Date().getFullYear();
@@ -50,12 +58,21 @@ function App() {
             )
           }
         />
+
         <Route
           path="/register"
           element={
-            session ? <Navigate to="/calendar" /> : <Register switchToLogin={() => window.location.href = '/login'} />
+            // 👇 Si es flujo de invitación, NO redirijas aunque haya sesión
+            allowRegister ? (
+              <Register switchToLogin={() => (window.location.href = '/login')} />
+            ) : session ? (
+              <Navigate to="/calendar" />
+            ) : (
+              <Register switchToLogin={() => (window.location.href = '/login')} />
+            )
           }
         />
+
         <Route
           path="/*"
           element={
@@ -71,12 +88,9 @@ function App() {
 
 function MainLayout({ session, holidays }) {
   const navigate = useNavigate();
-
   const handleNavigate = (target) => {
     if (target === 'logout') {
-      supabase.auth.signOut().then(() => {
-        window.location.href = '/login';
-      });
+      supabase.auth.signOut().then(() => (window.location.href = '/login'));
     } else {
       navigate(`/${target}`);
     }
@@ -90,12 +104,7 @@ function MainLayout({ session, holidays }) {
           <Route path="/calendar" element={<WorkCalendar />} />
           <Route
             path="/summary"
-            element={
-              <Estadisticas
-                userId={session?.user?.id}
-                holidays={holidays.map(h => h.date)} // Solo fechas para Estadisticas
-              />
-            }
+            element={<Estadisticas userId={session?.user?.id} holidays={holidays.map((h) => h.date)} />}
           />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<Navigate to="/calendar" />} />

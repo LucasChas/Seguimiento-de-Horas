@@ -2,15 +2,15 @@ import React, { useState } from 'react';
 import { supabase } from '../../../../supabase/client';
 import Swal from 'sweetalert2';
 import './Login.css';
-
-export default function Login({ onLogin, switchToRegister }) {
+import { useNavigate } from 'react-router-dom';
+export default function Login({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
   const [intentosFallidos, setIntentosFallidos] = useState(0);
   const [bloqueadoHasta, setBloqueadoHasta] = useState(null);
-
+  const navigate = useNavigate();
   const handleLogin = async (e) => {
     e.preventDefault();
 
@@ -83,7 +83,7 @@ export default function Login({ onLogin, switchToRegister }) {
         <button type="submit">Ingresar</button>
 
         <p className="auth-toggle">
-          ¿No tenés cuenta? <span onClick={switchToRegister}>Registrate acá</span>
+          ¿No tenés cuenta? <span onClick={() => navigate('/register')}>Registrate acá</span>
         </p>
       </form>
     </div>

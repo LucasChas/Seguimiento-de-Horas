@@ -116,56 +116,57 @@ export default function ProfileSettings({ email }) {
   'success'
 );}
 
-  async function  handleInviteUser() {
-    const { value: inviteEmail } = await Swal.fire({
-      title: 'Invitar nuevo usuario',
-      input: 'email',
-      inputPlaceholder: 'correo@ejemplo.com',
-      showCancelButton: true,
-      confirmButtonText: 'Enviar invitación',
-      preConfirm: async (input) => {
-        const err = validarEmail(input);
-        if (err) return Swal.showValidationMessage(err);
+async function handleInviteUser() {
+  const { value: inviteEmail } = await Swal.fire({
+    title: 'Invitar nuevo usuario',
+    input: 'email',
+    inputPlaceholder: 'correo@ejemplo.com',
+    showCancelButton: true,
+    confirmButtonText: 'Enviar invitación',
+    preConfirm: async (input) => {
+      const err = validarEmail(input);
+      if (err) return Swal.showValidationMessage(err);
 
-        if (input.toLowerCase() === email.toLowerCase()) {
-          return Swal.showValidationMessage('No podés invitarte a vos mismo.');
-        }
-
-        const { existe, error } = await emailYaRegistrado(input);
-        if (error) return Swal.showValidationMessage('Error al verificar el correo.');
-        if (existe) return Swal.showValidationMessage('Este correo ya pertenece a un usuario registrado.');
-        return input;
+      if (input.toLowerCase() === email.toLowerCase()) {
+        return Swal.showValidationMessage('No podés invitarte a vos mismo.');
       }
-    });
 
-    if (!inviteEmail) return;
-
-    Swal.fire({
-      title: 'Enviando invitación...',
-      text: 'Por favor esperá un momento...',
-      allowOutsideClick: false,
-      allowEscapeKey: false,
-      didOpen: () => Swal.showLoading()
-    });
-
-    const res = await fetch('https://mcrdacssebaldbevaybu.supabase.co/functions/v1/invite-user', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        email: inviteEmail,
-        redirecTo: 'http://localhost:5173/login'  //no redirige alli, redirige a localhost:3000
-      })
-    });
-
-    const result = await res.json();
-    Swal.close();
-
-    if (!res.ok) {
-      return Swal.fire({ icon: 'error', title: 'Error', text: result.error || 'No se pudo invitar al usuario' });
+      const { existe, error } = await emailYaRegistrado(input);
+      if (error) return Swal.showValidationMessage('Error al verificar el correo.');
+      if (existe) return Swal.showValidationMessage('Este correo ya pertenece a un usuario registrado.');
+      return input;
     }
+  });
 
-    Swal.fire('Invitación enviada', `Se envió un correo a ${inviteEmail}`, 'success');
+  if (!inviteEmail) return;
+
+  Swal.fire({
+    title: 'Enviando invitación...',
+    text: 'Por favor esperá un momento...',
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    didOpen: () => Swal.showLoading()
+  });
+
+  const appOrigin = window.location.origin; // ej: http://localhost:5173
+  
+  const redirectTo = `${window.location.origin}/register?invited=${encodeURIComponent(inviteEmail)}`;
+
+  const res = await fetch('https://mcrdacssebaldbevaybu.supabase.co/functions/v1/invite-user', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ email: inviteEmail, redirectTo })});
+
+  const result = await res.json();
+  Swal.close();
+
+  if (!res.ok) {
+    return Swal.fire({ icon: 'error', title: 'Error', text: result.error || 'No se pudo invitar al usuario' });
   }
+
+  Swal.fire('Invitación enviada', `Se envió un correo a ${inviteEmail}`, 'success');
+}
+
 
 async function handleEliminarCuenta() {
   const { value: password } = await Swal.fire({
