@@ -110,7 +110,7 @@ export default function ProfileSettings({ email }) {
       return Swal.fire({ icon: 'error', title: 'Error', text: updateErr.message });
     }
 
-    Swal.fire('Listo', 'Te enviamos un correo de confirmación.', 'success');
+    Swal.fire('Listo', 'Te enviamos un correo de confirmación. El mismo sera enviado a ambos emails como metodo de verificacíon', 'success');
   }
 
   async function  handleInviteUser() {
