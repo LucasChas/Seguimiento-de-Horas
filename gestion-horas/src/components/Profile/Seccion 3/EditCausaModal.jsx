@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import '../../DayModal/DayModal.css';
+import '../../DayModal/Daymodal.css';
 import Swal from 'sweetalert2';
 import { supabase } from '../../../../supabase/client';
 
