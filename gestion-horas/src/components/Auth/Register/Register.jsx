@@ -1,4 +1,4 @@
-import React, { useState ,useRef } from 'react';
+import React, { useState ,useRef, useEffect } from 'react';
 import { supabase } from '../../../../supabase/client';
 import './Register.css';
 import 'react-phone-input-2/lib/style.css';
@@ -17,7 +17,16 @@ export default function Register({ switchToLogin }) {
   const [showConfirm, setShowConfirm] = useState(false);
   const [passwordTouched, setPasswordTouched] = useState(false);
   const [loading, setLoading] = useState(false);
+    useEffect(() => {
+      const query = new URLSearchParams(window.location.search);
+      const hash = new URLSearchParams(window.location.hash.replace('#', ''));
+      const invitedEmail = query.get('invited');
+      const isInvite = hash.get('type') === 'invite';
 
+      if (invitedEmail && isInvite) {
+        setEmail(invitedEmail);
+      }
+    }, []);
   const passRef = useRef(null);
   const confirmRef = useRef(null);
   const validarContraseña = pass =>
@@ -62,6 +71,10 @@ export default function Register({ switchToLogin }) {
     if (!validarContraseña(password)) {
       return lanzarAlerta('Contraseña insegura', 'Debe cumplir con todos los requisitos.');
     }
+    const queryEmail = new URLSearchParams(window.location.search).get('invited');
+      if (queryEmail && queryEmail !== email) {
+        return lanzarAlerta('Email inválido', 'No podés cambiar el correo invitado.');
+      }
 
     setLoading(true);
     try {
@@ -138,6 +151,7 @@ export default function Register({ switchToLogin }) {
           placeholder="Correo electrónico"
           value={email}
           onChange={e => setEmail(e.target.value)}
+          readOnly={new URLSearchParams(window.location.search).has('invited')}
         />
 
         <div className="password-container">
