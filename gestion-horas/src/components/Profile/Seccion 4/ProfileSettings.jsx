@@ -271,7 +271,7 @@ export default function ProfileSettings({ email }) {
     <div className="settings-section">
       <div className="settings-grid">
         <div className="settings-card password">
-          <h3 className='h3-settings'>Cambiar Contraseña</h3>
+          <h3 className='h3-settings'>Actualizar Contraseña</h3>
           <div className="settings-row">
             <input type="password" value="********" readOnly />
             <button className="settings-btn" onClick={handleChangePassword}>Cambiar contraseña</button>
@@ -279,7 +279,7 @@ export default function ProfileSettings({ email }) {
         </div>
 
         <div className="settings-card email">
-          <h3 className='h3-settings'>Cambiar Email</h3>
+          <h3 className='h3-settings'>Actualizar Email</h3>
           <div className="settings-row">
             <input type="email" value={email} readOnly />
             <button className="settings-btn" onClick={handleChangeEmail}>Cambiar email</button>
@@ -288,7 +288,7 @@ export default function ProfileSettings({ email }) {
 
         <div className="settings-card delete">
           <h3 className='h3-settings'>Eliminar cuenta</h3>
-          <p className="settings-note">Esta acción es irreversible. Todos tus datos serán eliminados.</p>
+
           <button className="settings-btn danger" onClick={handleEliminarCuenta}>Eliminar cuenta</button>
         </div>
 
