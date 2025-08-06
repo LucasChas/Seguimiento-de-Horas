@@ -60,7 +60,7 @@ export default function Register({ switchToLogin }) {
     });
   };
 
-  const handleRegister = async e => {
+const handleRegister = async e => {
   e.preventDefault();
 
   if (!nombre || !apellido || !telefono || !email || !password || !confirmar) {
@@ -87,21 +87,33 @@ export default function Register({ switchToLogin }) {
 
   const query = new URLSearchParams(window.location.search);
   const access_token = query.get('access_token');
+  const invitedEmail = query.get('invited');
 
   setLoading(true);
 
   try {
     let userId;
 
-    if (access_token) {
-      // Completar registro usando el token de invitación
-      const { data, error } = await supabase.auth.updateUser(access_token, {
+    if (access_token && invitedEmail) {
+      // Primero verificás el OTP para crear sesión autenticada
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: invitedEmail,
+        token: access_token,
+        type: 'invite',
+      });
+
+      if (error) throw error;
+
+      userId = data.user.id;
+
+      // Ahora, con sesión, actualizás la contraseña y datos
+      const { error: updateError } = await supabase.auth.updateUser({
         password,
         data: { display_name: `${nombre.trim()} ${apellido.trim()}` }
       });
 
-      if (error) throw error;
-      userId = data.user.id;
+      if (updateError) throw updateError;
+
     } else {
       // Registro normal (sin invitación)
       const { data, error } = await supabase.auth.signUp({
@@ -143,6 +155,7 @@ export default function Register({ switchToLogin }) {
     setLoading(false);
   }
 };
+
 
   return (
     <div className="auth-container">
