@@ -133,13 +133,17 @@
 .swal2-popup { border-radius: 12px; padding: 1.5rem; font-size: 1rem; }
 .swal2-title { font-size: 1.4rem; color: #333
 ; }
+
+
 .swal2-input {
-border-radius: 8px;
-border: 1px solid #ccc;
-box-sizing: border-box;
-font-size: 0.95rem;
-padding: 0.5rem 2.5rem 0.5rem 0.8rem;
-width: 90%;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  font-size: 0.95rem;
+  padding: 2.5rem;
+  width: 100%;
+  margin: 0 auto;
+  display: block;
 }
 .swal2-input:focus {
 outline: none;
@@ -174,5 +178,19 @@ z-index: 10;
 }
 
 .password-container {
-position: relative;
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+.toggle-password {
+  position: absolute;
+  right: 1rem;
+  top: 40%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  z-index: 10;
 }

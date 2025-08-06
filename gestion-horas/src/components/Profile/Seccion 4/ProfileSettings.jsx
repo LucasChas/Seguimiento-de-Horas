@@ -21,17 +21,19 @@ export default function ProfileSettings({ email }) {
     const toggle = document.getElementById(toggleId);
 
     const eye = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="#1e88e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-eye">
-        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/>
-        <circle cx="12" cy="12" r="3"/>
-      </svg>`;
-    const eyeOff = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" stroke="#1e88e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-eye-off">
-        <path d="M17.94 17.94A10.97 10.97 0 0 1 12 20c-7 0-11-8-11-8a21.94 21.94 0 0 1 5.17-6.11"/>
-        <path d="M1 1l22 22"/>
-        <path d="M9.53 9.53a3 3 0 0 0 4.24 4.24"/>
-        <path d="M12 12a3 3 0 0 0-3-3"/>
-      </svg>`;
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="#1e88e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>`;
+
+        const eyeOff = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="#1e88e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.94 17.94A10.97 10.97 0 0 1 12 20c-7 0-11-8-11-8a21.94 21.94 0 0 1 5.17-6.11"/>
+            <path d="M1 1l22 22"/>
+            <path d="M9.53 9.53a3 3 0 0 0 4.24 4.24"/>
+            <path d="M12 12a3 3 0 0 0-3-3"/>
+          </svg>`;
+
 
     const renderIcon = () => {
       toggle.innerHTML = visible ? eyeOff : eye;
