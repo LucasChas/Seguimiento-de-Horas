@@ -78,17 +78,17 @@ function App() {
         <Route path="/reset" element={<ResetPassword />} />
 
         <Route
-          path="/register"
-          element={
-            allowRegister ? (
-              <Register switchToLogin={() => (window.location.href = '/login')} />
-            ) : session ? (
-              <Navigate to="/calendar" />
-            ) : (
-              <Register switchToLogin={() => (window.location.href = '/login')} />
-            )
-          }
-        />
+            path="/register"
+            element={
+              allowRegister || (session && session.user?.email_confirmed_at === null) ? (
+                <Register switchToLogin={() => (window.location.href = '/login')} />
+              ) : session ? (
+                <Navigate to="/calendar" />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
 
         <Route
           path="/*"
