@@ -1,14 +1,16 @@
 // src/components/Auth/Login/Login.jsx
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { supabase } from '../../../../supabase/client';
 import Swal from 'sweetalert2';
-import './Login.css';
 import { useNavigate } from 'react-router-dom';
+import './Login.css';
+import { FiEye, FiEyeOff } from 'react-icons/fi'; // Íconos modernos
 
 export default function Login({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const passwordRef = useRef(null);
 
   const [intentosFallidos, setIntentosFallidos] = useState(0);
   const [bloqueadoHasta, setBloqueadoHasta] = useState(null);
@@ -60,6 +62,7 @@ export default function Login({ onLogin }) {
         <h2>Iniciar sesión</h2>
 
         <input
+          className="input-1"
           type="email"
           placeholder="Correo electrónico"
           value={email}
@@ -69,20 +72,28 @@ export default function Login({ onLogin }) {
 
         <div className="password-container">
           <input
+            ref={passwordRef}
             type={showPassword ? 'text' : 'password'}
+            className="input-1"
             placeholder="Contraseña"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-          <span className="toggle-password" onClick={() => setShowPassword(!showPassword)}>
-            {showPassword ? '🙈' : '👁️'}
+          <span
+            className="toggle-password"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => {
+              setShowPassword(!showPassword);
+              requestAnimationFrame(() => passwordRef.current?.focus());
+            }}
+            title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+          >
+            {showPassword ? <FiEyeOff /> : <FiEye />}
           </span>
         </div>
 
         <button type="submit">Ingresar</button>
-
-        
 
         <p className="auth-toggle">
           ¿No tenés cuenta? <span onClick={() => navigate('/register')}>Registrate acá</span>

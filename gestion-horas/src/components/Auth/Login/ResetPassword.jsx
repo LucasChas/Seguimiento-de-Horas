@@ -1,7 +1,8 @@
 // src/components/Auth/Login/ResetPassword.jsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from '../../../../supabase/client';
 import Swal from 'sweetalert2';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 import './Login.css';
 
 export default function ResetPassword() {
@@ -10,24 +11,27 @@ export default function ResetPassword() {
   const [showPass1, setShowPass1] = useState(false);
   const [showPass2, setShowPass2] = useState(false);
 
+  const passRef = useRef(null);
+  const repeatRef = useRef(null);
+
   const [loading, setLoading] = useState(false);
   const [sessionChecked, setSessionChecked] = useState(false);
   const [hasSession, setHasSession] = useState(false);
 
   useEffect(() => {
-    // 1) Chequeo inmediato
     supabase.auth.getSession().then(({ data: { session } }) => {
       setHasSession(!!session);
       setSessionChecked(true);
     });
-    // 2) Escucho por si el SDK procesa el hash unos ms después
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       setHasSession(!!session);
       setSessionChecked(true);
     });
+
     return () => subscription.unsubscribe();
   }, []);
-  
+
   const validarPasswordFuerte = (pwd) =>
     pwd.length >= 8 &&
     /[A-Z]/.test(pwd) &&
@@ -57,21 +61,21 @@ export default function ResetPassword() {
     setLoading(false);
 
     if (error) {
-            const msg = error.message || '';
-            const msgLower = msg.toLowerCase();
+      const msg = error.message || '';
+      const msgLower = msg.toLowerCase();
 
-            if (msgLower.includes('new password should be different')) {
-                return Swal.fire(
-                'Contraseña inválida',
-                'La nueva contraseña debe ser distinta a la actual.',
-                'warning'
-                );
-            }
+      if (msgLower.includes('new password should be different')) {
+        return Swal.fire(
+          'Contraseña inválida',
+          'La nueva contraseña debe ser distinta a la actual.',
+          'warning'
+        );
+      }
 
-            return Swal.fire('Error', msg, 'error');
-            }
+      return Swal.fire('Error', msg, 'error');
+    }
 
-                Swal.fire('¡Listo!', 'Tu contraseña fue actualizada correctamente.', 'success');
+    Swal.fire('¡Listo!', 'Tu contraseña fue actualizada correctamente.', 'success');
     await supabase.auth.signOut();
     window.location.href = '/login';
   };
@@ -96,7 +100,9 @@ export default function ResetPassword() {
 
         <div className="password-container">
           <input
+            ref={passRef}
             type={showPass1 ? 'text' : 'password'}
+            className="input-1"
             placeholder="Nueva contraseña"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -106,15 +112,21 @@ export default function ResetPassword() {
           <span
             className="toggle-password"
             title={showPass1 ? 'Ocultar' : 'Mostrar'}
-            onClick={() => setShowPass1((v) => !v)}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => {
+              setShowPass1((v) => !v);
+              requestAnimationFrame(() => passRef.current?.focus());
+            }}
           >
-            {showPass1 ? '🙈' : '👁️'}
+            {showPass1 ? <FiEyeOff /> : <FiEye />}
           </span>
         </div>
 
         <div className="password-container">
           <input
+            ref={repeatRef}
             type={showPass2 ? 'text' : 'password'}
+            className="input-1"
             placeholder="Repetir nueva contraseña"
             value={repeatPassword}
             onChange={(e) => setRepeatPassword(e.target.value)}
@@ -124,9 +136,13 @@ export default function ResetPassword() {
           <span
             className="toggle-password"
             title={showPass2 ? 'Ocultar' : 'Mostrar'}
-            onClick={() => setShowPass2((v) => !v)}
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => {
+              setShowPass2((v) => !v);
+              requestAnimationFrame(() => repeatRef.current?.focus());
+            }}
           >
-            {showPass2 ? '🙈' : '👁️'}
+            {showPass2 ? <FiEyeOff /> : <FiEye />}
           </span>
         </div>
 

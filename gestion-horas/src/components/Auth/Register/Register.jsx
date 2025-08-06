@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState ,useRef } from 'react';
 import { supabase } from '../../../../supabase/client';
 import './Register.css';
 import 'react-phone-input-2/lib/style.css';
 import PhoneInput from 'react-phone-input-2';
 import Swal from 'sweetalert2';
-import 'sweetalert2/dist/sweetalert2.min.css';
+import { FiEye, FiEyeOff } from 'react-icons/fi'; // ICONOS NUEVOS
 
 export default function Register({ switchToLogin }) {
   const [nombre, setNombre] = useState('');
@@ -18,6 +18,8 @@ export default function Register({ switchToLogin }) {
   const [passwordTouched, setPasswordTouched] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const passRef = useRef(null);
+  const confirmRef = useRef(null);
   const validarContraseña = pass =>
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+{}\[\]:;<>,.?~\\\/-]).{8,}$/.test(pass);
 
@@ -39,7 +41,6 @@ export default function Register({ switchToLogin }) {
   const handleRegister = async e => {
     e.preventDefault();
 
-    // Validaciones de campos
     if (!nombre || !apellido || !telefono || !email || !password || !confirmar) {
       return lanzarAlerta('Campos incompletos', 'Todos los campos son obligatorios.');
     }
@@ -64,7 +65,6 @@ export default function Register({ switchToLogin }) {
 
     setLoading(true);
     try {
-      // 1) Registro en Auth
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -75,7 +75,6 @@ export default function Register({ switchToLogin }) {
       });
       if (signUpError) throw signUpError;
 
-      // 2) Guardar perfil en tabla "profiles"
       const userId = signUpData.user.id;
       const cleanPhone = telefono.replace(/\D/g, '');
       const { error: profileError } = await supabase
@@ -89,7 +88,6 @@ export default function Register({ switchToLogin }) {
         });
       if (profileError) throw profileError;
 
-      // Éxito
       Swal.fire({
         title: 'Registro exitoso',
         text: 'Revisá tu correo para verificar la cuenta.',
@@ -106,10 +104,11 @@ export default function Register({ switchToLogin }) {
 
   return (
     <div className="auth-container">
-      <form className="auth-form" onSubmit={handleRegister}>
+      <form  onSubmit={handleRegister}>
         <h2>Crear cuenta</h2>
 
         <input
+          className='input-1'
           type="text"
           placeholder="Nombre"
           value={nombre}
@@ -117,6 +116,7 @@ export default function Register({ switchToLogin }) {
         />
 
         <input
+          className='input-1'
           type="text"
           placeholder="Apellido"
           value={apellido}
@@ -127,12 +127,13 @@ export default function Register({ switchToLogin }) {
           country={'ar'}
           value={telefono}
           onChange={setTelefono}
-          inputStyle={{ width: '100%', height: '2.8rem', borderRadius: '10px', border: '1px solid #ccc', paddingLeft: '3.5rem', fontSize: '1rem' }}
-          containerStyle={{ marginBottom: '1rem' }}
+          containerClass="phone-container"
+          inputClass="phone-input"
           placeholder="Teléfono"
         />
 
         <input
+          className='input-1'
           type="email"
           placeholder="Correo electrónico"
           value={email}
@@ -140,15 +141,25 @@ export default function Register({ switchToLogin }) {
         />
 
         <div className="password-container">
-          <input
+            <input
+            ref={passRef}
             type={showPassword ? 'text' : 'password'}
+            className='input-1'
             placeholder="Contraseña"
             value={password}
             onChange={e => setPassword(e.target.value)}
             onFocus={() => setPasswordTouched(true)}
           />
-          <span className="toggle-password" onClick={() => setShowPassword(!showPassword)}>
-            {showPassword ? '🙈' : '👁️'}
+          <span
+            className="toggle-password"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => {
+              setShowPassword(p => !p);
+              requestAnimationFrame(() => passRef.current?.focus());
+            }}
+            title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+          >
+            {showPassword ? <FiEyeOff /> : <FiEye />}
           </span>
 
           {passwordTouched && password.length > 0 && (
@@ -175,17 +186,26 @@ export default function Register({ switchToLogin }) {
         </div>
 
         <div className="password-container">
-          <input
-            type={showConfirm ? 'text' : 'password'}
-            placeholder="Confirmar contraseña"
-            value={confirmar}
-            onChange={e => setConfirmar(e.target.value)}
-          />
-          <span className="toggle-password" onClick={() => setShowConfirm(!showConfirm)}>
-            {showConfirm ? '🙈' : '👁️'}
-          </span>
-        </div>
-
+  <input
+    ref={confirmRef}
+    type={showConfirm ? 'text' : 'password'}
+    placeholder="Confirmar contraseña"
+    className='input-1'
+    value={confirmar}
+    onChange={e => setConfirmar(e.target.value)}
+  />
+  <span
+    className="toggle-password"
+    onMouseDown={(e) => e.preventDefault()}
+    onClick={() => {
+      setShowConfirm(p => !p);
+      requestAnimationFrame(() => confirmRef.current?.focus());
+    }}
+    title={showConfirm ? 'Ocultar confirmación' : 'Mostrar confirmación'}
+  >
+    {showConfirm ? <FiEyeOff /> : <FiEye />}
+  </span>
+</div>
         <button type="submit" disabled={loading}>
           {loading ? 'Registrando...' : 'Registrarme'}
         </button>

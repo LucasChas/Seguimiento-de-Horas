@@ -1,4 +1,4 @@
-/* Login.css */
+/* Contenedor general */
 .auth-container {
   max-width: 400px;
   margin: 5vh auto;
@@ -17,16 +17,19 @@
   text-align: center;
 }
 
+/* Inputs comunes */
 .auth-container input {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  margin-bottom: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  font-size: 1rem;
-  box-sizing: border-box;
+  width: 100% !important;
+  height: 2.8rem !important;
+  padding: 0 2.5rem 0 1rem !important;
+  line-height: 2.8rem !important;
+  border: 1px solid #ccc !important;
+  border-radius: 10px !important;
+  font-size: 1rem !important;
+  box-sizing: border-box !important;
 }
 
+/* Botón */
 .auth-container button {
   width: 100%;
   padding: 0.8rem 1.2rem;
@@ -38,50 +41,107 @@
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
-
 .auth-container button:hover {
   background-color: #0d154e;
 }
 
+/* Enlaces */
 .auth-container p {
   margin-top: 1rem;
   text-align: center;
   font-size: 0.95rem;
 }
-
 .auth-container p span {
   color: #1976d2;
   cursor: pointer;
   font-weight: 600;
 }
-
 .auth-container p span:hover {
   text-decoration: underline;
 }
 
+/* Campos de contraseña ajustados */
 .password-container {
   position: relative;
+  width: 100%;
+  margin-bottom: 1rem;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
 }
 
 .password-container input {
-  width: 100%;
-  padding-right: 2.5rem;
+  width: 100% !important;
+  height: 2.8rem !important;
+  padding: 0 2.75rem 0 1rem !important;
+  line-height: 2.8rem !important;
+  border: 1px solid #ccc !important;
+  border-radius: 10px !important;
+  font-size: 1rem !important;
+  box-sizing: border-box !important;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
 }
 
+/* Corrección del ícono para que no mueva el input */
 .toggle-password {
   position: absolute;
-  right: 0.8rem;
-  top: 0.4em;
+  right: 1rem;
+  top: 1.5rem;
+  transform: translateY(-50%);
+  width: 1.6rem;
+  height: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: #1a237e;
   cursor: pointer;
-  font-size: 1.2rem;
   user-select: none;
+  z-index: 10;
 }
 
-/* NUEVO: Reglas de contraseña como popup flotante con flechita al lado del input */
-/* Popup flotante de reglas */
+
+.input-1 {
+  width: 100%  !important;
+  padding: 0.55rem  !important;
+  font-size: 1rem  !important;
+  border-radius: 8px  !important;
+  border: 1px solid #ccc  !important;
+  transition: border-color 0.2s  !important;
+  margin-top: 0rem !important; /* ✅ Anula el estilo global molesto */
+}
+/* Evita cambios en tamaño del input al enfocar */
+.password-container input:focus {
+  outline: none;
+  border: 1px solid #1a237e !important;
+  box-shadow: none !important;
+}
+
+/* PhoneInput alineado y con misma altura */
+.react-tel-input {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+.react-tel-input .form-control {
+  width: 100% !important;
+  height: 2.8rem !important;
+  border-radius: 10px !important;
+  border: 1px solid #ccc !important;
+  padding-left: 3.5rem !important;
+  padding-right: 1rem !important;
+  font-size: 1rem !important;
+  box-sizing: border-box !important;
+}
+.react-tel-input .flag-dropdown {
+  border: 1px solid #ccc;
+  border-right: none;
+  border-radius: 10px 0 0 10px;
+}
+.react-tel-input .selected-flag {
+  height: 2.8rem;
+  border-radius: 10px 0 0 10px;
+}
+
+/* Popup de reglas de contraseña */
 .password-popup {
   position: absolute;
   top: 50%;
@@ -101,82 +161,14 @@
   margin: 0;
   padding: 0;
 }
-
 .password-popup li {
   list-style: none;
   margin-bottom: 0.4rem;
   font-weight: 500;
   transition: color 0.3s ease;
 }
+.password-popup li.valid { color: #388e3c; }
+.password-popup li.invalid { color: #d32f2f; }
 
-.password-popup li.valid {
-  color: #388e3c;
-}
-
-.password-popup li.invalid {
-  color: #d32f2f;
-}
-
-
-/*---------------------------------*/
-
-.input-wrapper {
-  position: relative;
-  width: 100%;
-}
-
-.input-invalid {
-  border-color: #d32f2f !important;
-}
-
-/* Tooltip estilo triangulito */
-.input-tooltip {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background-color: #fff;
-  color: #333;
-  font-size: 0.85rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 0.5rem 0.75rem;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  z-index: 15;
-  white-space: nowrap;
-}
-
-.input-tooltip.left {
-  left: 105%;
-}
-
-.input-tooltip.right {
-  left: 110%;
-}
-
-/* Flechita del tooltip */
-.tooltip-arrow {
-  position: absolute;
-  width: 0;
-  height: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  border-style: solid;
-}
-
-.tooltip-arrow.left {
-  left: -8px;
-  border-width: 8px 8px 8px 0;
-  border-color: transparent #ccc transparent transparent;
-}
-
-.tooltip-arrow.right {
-  left: -8px;
-  border-width: 8px 8px 8px 0;
-  border-color: transparent #ccc transparent transparent;
-}
-
-.password-container{
-  position: relative;
-  display: block;             /* igual que el fix global */
-  align-items: initial;
-}
+/* Utilidades adicionales */
+.input-invalid { border-color: #d32f2f !important; }
