@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
     }
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
-
+    console.log("🔗 redirectTo recibido:", redirectTo); // DEBUG
     const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
       redirectTo, // 👈 clave: /register?invited=...
     });

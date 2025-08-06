@@ -251,6 +251,7 @@ export default function ProfileSettings({ email }) {
     });
 
     const redirectTo = `${window.location.origin}/register?invited=${encodeURIComponent(inviteEmail)}`;
+    console.log("RedirectTo register: ",redirectTo)
     const res = await fetch('https://mcrdacssebaldbevaybu.supabase.co/functions/v1/invite-user', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
