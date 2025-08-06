@@ -61,37 +61,50 @@ export default function Register({ switchToLogin }) {
   };
 
   const handleRegister = async e => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!nombre || !apellido || !telefono || !email || !password || !confirmar) {
-      return lanzarAlerta('Campos incompletos', 'Todos los campos son obligatorios.');
-    }
-    if (!validarNombre(nombre)) {
-      return lanzarAlerta('Nombre inválido', 'Solo se permiten letras y espacios.');
-    }
-    if (!validarNombre(apellido)) {
-      return lanzarAlerta('Apellido inválido', 'Solo se permiten letras y espacios.');
-    }
-    if (!validarTelefono(telefono)) {
-      return lanzarAlerta('Teléfono inválido', 'Debe contener entre 8 y 15 números.');
-    }
-    if (!validarEmail(email)) {
-      return lanzarAlerta('Correo inválido', 'Ingresá un correo electrónico válido.');
-    }
-    if (password !== confirmar) {
-      return lanzarAlerta('Contraseñas distintas', 'Ambas contraseñas deben coincidir.');
-    }
-    if (!validarContraseña(password)) {
-      return lanzarAlerta('Contraseña insegura', 'Debe cumplir con todos los requisitos.');
-    }
-    const queryEmail = new URLSearchParams(window.location.search).get('invited');
-      if (queryEmail && queryEmail !== email) {
-        return lanzarAlerta('Email inválido', 'No podés cambiar el correo invitado.');
-      }
+  if (!nombre || !apellido || !telefono || !email || !password || !confirmar) {
+    return lanzarAlerta('Campos incompletos', 'Todos los campos son obligatorios.');
+  }
+  if (!validarNombre(nombre)) {
+    return lanzarAlerta('Nombre inválido', 'Solo se permiten letras y espacios.');
+  }
+  if (!validarNombre(apellido)) {
+    return lanzarAlerta('Apellido inválido', 'Solo se permiten letras y espacios.');
+  }
+  if (!validarTelefono(telefono)) {
+    return lanzarAlerta('Teléfono inválido', 'Debe contener entre 8 y 15 números.');
+  }
+  if (!validarEmail(email)) {
+    return lanzarAlerta('Correo inválido', 'Ingresá un correo electrónico válido.');
+  }
+  if (password !== confirmar) {
+    return lanzarAlerta('Contraseñas distintas', 'Ambas contraseñas deben coincidir.');
+  }
+  if (!validarContraseña(password)) {
+    return lanzarAlerta('Contraseña insegura', 'Debe cumplir con todos los requisitos.');
+  }
 
-    setLoading(true);
-    try {
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+  const query = new URLSearchParams(window.location.search);
+  const access_token = query.get('access_token');
+
+  setLoading(true);
+
+  try {
+    let userId;
+
+    if (access_token) {
+      // Completar registro usando el token de invitación
+      const { data, error } = await supabase.auth.updateUser(access_token, {
+        password,
+        data: { display_name: `${nombre.trim()} ${apellido.trim()}` }
+      });
+
+      if (error) throw error;
+      userId = data.user.id;
+    } else {
+      // Registro normal (sin invitación)
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -99,34 +112,37 @@ export default function Register({ switchToLogin }) {
           emailRedirectTo: window.location.origin
         }
       });
-      if (signUpError) throw signUpError;
-
-      const userId = signUpData.user.id;
-      const cleanPhone = telefono.replace(/\D/g, '');
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: userId,
-          nombre: nombre.trim(),
-          apellido: apellido.trim(),
-          telefono: cleanPhone || null,
-          email: email.trim()
-        });
-      if (profileError) throw profileError;
-
-      Swal.fire({
-        title: 'Registro exitoso',
-        text: 'Revisá tu correo para verificar la cuenta.',
-        icon: 'success',
-        confirmButtonColor: '#1a237e'
-      }).then(() => switchToLogin());
-    } catch (err) {
-      console.error(err);
-      lanzarAlerta('Error', err.message, 'error');
-    } finally {
-      setLoading(false);
+      if (error) throw error;
+      userId = data.user.id;
     }
-  };
+
+    const cleanPhone = telefono.replace(/\D/g, '');
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .insert({
+        id: userId,
+        nombre: nombre.trim(),
+        apellido: apellido.trim(),
+        telefono: cleanPhone || null,
+        email: email.trim()
+      });
+
+    if (profileError) throw profileError;
+
+    Swal.fire({
+      title: 'Registro exitoso',
+      text: 'Tu cuenta ha sido configurada exitosamente.',
+      icon: 'success',
+      confirmButtonColor: '#1a237e'
+    }).then(() => switchToLogin());
+
+  } catch (err) {
+    console.error(err);
+    lanzarAlerta('Error', err.message, 'error');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="auth-container">
