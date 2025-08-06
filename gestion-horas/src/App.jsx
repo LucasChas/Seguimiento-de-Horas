@@ -52,7 +52,7 @@ function App() {
     <Router>
       <Routes>
         <Route
-          path="/login"
+          path={"/login" || "/"}
           element={
             session ? (
               <Navigate to="/calendar" />
