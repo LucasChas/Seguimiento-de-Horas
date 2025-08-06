@@ -30,9 +30,21 @@ function App() {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  // NO borrar el hash (#access_token&type=recovery). Supabase lo necesita para crear la sesión.
+  // ✅ Redirigir automáticamente si viene desde un mail de invitación (hash con token)
+  useEffect(() => {
+    const hash = new URLSearchParams(window.location.hash.replace('#', ''));
+    const type = hash.get('type');
+    const token = hash.get('access_token');
+    const alreadyOnRegister = window.location.pathname === '/register';
 
-  // Permitir /register sólo para flujos de invitación (no para recovery)
+    if (type === 'invite' && token && !alreadyOnRegister) {
+      const search = new URLSearchParams(window.location.search);
+      const invitedEmail = search.get('invited');
+      window.location.href = `/register?invited=${invitedEmail || ''}${window.location.hash}`;
+    }
+  }, []);
+
+  // Permitir acceso a /register si viene por invitación
   useEffect(() => {
     const qs = new URLSearchParams(window.location.search);
     const hash = new URLSearchParams(window.location.hash.replace('#', ''));
@@ -62,10 +74,7 @@ function App() {
           }
         />
 
-        {/* Solicitar enlace de recuperación */}
         <Route path="/recover" element={<RecoverPassword />} />
-
-        {/* Establecer nueva contraseña (llega desde el mail con token en el hash) */}
         <Route path="/reset" element={<ResetPassword />} />
 
         <Route
