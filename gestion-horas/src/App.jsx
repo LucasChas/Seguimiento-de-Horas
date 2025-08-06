@@ -46,12 +46,18 @@ function App() {
 
   // Permitir acceso a /register si viene por invitación
   useEffect(() => {
-    const qs = new URLSearchParams(window.location.search);
-    const hash = new URLSearchParams(window.location.hash.replace('#', ''));
-    const invited = qs.has('invited');
-    const isInvite = hash.get('type') === 'invite';
-    setAllowRegister(invited || isInvite);
-  }, []);
+  const query = new URLSearchParams(window.location.search);
+  const invited = query.get('invited');
+  const hash = new URLSearchParams(window.location.hash.replace('#', ''));
+  const type = hash.get('type');
+
+  // Si llega por redirección a dominio incorrecto, reenvía al correcto
+  const isWrongDomain = window.location.hostname.includes('n1hd');
+  if (isWrongDomain && type === 'invite' && invited) {
+    const fixedUrl = `https://seguimiento-de-horas.vercel.app/register?invited=${invited}${window.location.hash}`;
+    window.location.replace(fixedUrl);
+  }
+}, []);
 
   // Cargar feriados cuando haya sesión
   useEffect(() => {
