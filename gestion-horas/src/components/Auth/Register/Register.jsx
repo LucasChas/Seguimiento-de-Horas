@@ -17,16 +17,29 @@ export default function Register({ switchToLogin }) {
   const [showConfirm, setShowConfirm] = useState(false);
   const [passwordTouched, setPasswordTouched] = useState(false);
   const [loading, setLoading] = useState(false);
-    useEffect(() => {
-      const query = new URLSearchParams(window.location.search);
-      const hash = new URLSearchParams(window.location.hash.replace('#', ''));
-      const invitedEmail = query.get('invited');
-      const isInvite = hash.get('type') === 'invite';
 
-      if (invitedEmail && isInvite) {
-        setEmail(invitedEmail);
-      }
-    }, []);
+  
+    useEffect(() => {
+        const validateToken = async (token) => {
+          const { data, error } = await supabase.auth.getUser(token);
+          return !error && data?.user;
+        };
+
+        const query = new URLSearchParams(window.location.search);
+        const invitedEmail = query.get('invited');
+        const access_token = query.get('access_token');
+
+        if (invitedEmail && access_token) {
+          validateToken(access_token).then(isValid => {
+            if (isValid) {
+              setEmail(invitedEmail);
+            } else {
+              lanzarAlerta('Token inválido', 'La invitación no es válida o ha expirado.', 'error');
+              window.location.replace('/login');
+            }
+          });
+        }
+      }, []);
   const passRef = useRef(null);
   const confirmRef = useRef(null);
   const validarContraseña = pass =>

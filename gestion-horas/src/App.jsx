@@ -34,13 +34,13 @@ function App() {
   useEffect(() => {
     const hash = new URLSearchParams(window.location.hash.replace('#', ''));
     const type = hash.get('type');
-    const token = hash.get('access_token');
-    const alreadyOnRegister = window.location.pathname === '/register';
+    const access_token = hash.get('access_token');
 
-    if (type === 'invite' && token && !alreadyOnRegister) {
-      const search = new URLSearchParams(window.location.search);
-      const invitedEmail = search.get('invited');
-      window.location.href = `/register?invited=${invitedEmail || ''}${window.location.hash}`;
+    const query = new URLSearchParams(window.location.search);
+    const invitedEmail = query.get('invited');
+
+    if (type === 'invite' && access_token && invitedEmail) {
+      window.location.replace(`/register?invited=${encodeURIComponent(invitedEmail)}&access_token=${access_token}`);
     }
   }, []);
 
@@ -84,17 +84,19 @@ function App() {
         <Route path="/reset" element={<ResetPassword />} />
 
         <Route
-            path="/register"
-            element={
-              allowRegister || (session && session.user?.email_confirmed_at === null) ? (
-                <Register switchToLogin={() => (window.location.href = '/login')} />
-              ) : session ? (
-                <Navigate to="/calendar" />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
+          path="/register"
+          element={
+            allowRegister ||
+            new URLSearchParams(window.location.search).get('invited') ||
+            (session && session.user?.email_confirmed_at === null) ? (
+              <Register switchToLogin={() => (window.location.href = '/login')} />
+            ) : session ? (
+              <Navigate to="/calendar" />
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
+        />
 
         <Route
           path="/*"
