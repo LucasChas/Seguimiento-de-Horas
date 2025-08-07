@@ -151,13 +151,12 @@ export default function Register({ switchToLogin }) {
         />
 
         <input
-            className="input-1"
-            type="email"
-            placeholder="Correo electrónico"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            readOnly={!!email}
-          />
+          className="input-1"
+          type="text"
+          placeholder="Apellido"
+          value={apellido}
+          onChange={(e) => setApellido(e.target.value)}
+        />
 
         <PhoneInput
           country={'ar'}
