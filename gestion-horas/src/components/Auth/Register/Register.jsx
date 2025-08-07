@@ -134,24 +134,21 @@ export default function Register({ switchToLogin }) {
       let inserted = false;
       let retries = 10;
       let lastError = null;
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId);
 
-      console.log("¿Existe el profile antes del update?:", existingProfile);
       while (!inserted && retries > 0) {
-        const { data: updateResult, error } = await supabase
-          .from('profiles')
-          .update({
+        const { error: updateProfileError } = await supabase
+            .from('profiles')
+            .update({
               nombre: nombre.trim(),
               apellido: apellido.trim(),
               telefono: cleanPhone || null
             })
-            .eq('id', userId)
-            .select();      
+            .eq('id', userId);
 
-      console.log("Resultado del update:", updateResult, error);
+          if (updateProfileError) {
+            throw new Error("No se pudo actualizar el perfil: " + updateProfileError.message);
+          }
+
 
         if (!error) {
           inserted = true;
