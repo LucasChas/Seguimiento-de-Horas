@@ -132,15 +132,29 @@ export default function Register({ switchToLogin }) {
 
     // Insertamos en la tabla profiles
     const cleanPhone = telefono.replace(/\D/g, '');
-    const { error: profileError } = await supabase.from('profiles').insert({
-      id: userId,
-      nombre: nombre.trim(),
-      apellido: apellido.trim(),
-      telefono: cleanPhone || null,
-      email: email.trim(),
-    });
+    let inserted = false;
+    let retriesInsert = 5;
+    let lastInsertError = null;
 
-    if (profileError) throw profileError;
+    while (!inserted && retriesInsert > 0) {
+      const { error: profileError } = await supabase.from('profiles').insert({
+        id: userId,
+        nombre: nombre.trim(),
+        apellido: apellido.trim(),
+        telefono: cleanPhone || null,
+        email: email.trim(),
+      });
+
+      if (!profileError) {
+        inserted = true;
+      } else {
+        lastInsertError = profileError;
+        await new Promise((res) => setTimeout(res, 1000)); // espera 1s
+        retriesInsert--;
+      }
+    }
+
+    if (!inserted) throw lastInsertError;
 
     Swal.fire({
       title: 'Registro exitoso',
