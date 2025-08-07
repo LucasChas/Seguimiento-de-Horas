@@ -92,6 +92,14 @@ function App() {
               const invited = search.get('invited');
               const isInviteFlow = token && invited;
 
+              // Si hay sesión activa pero el correo no coincide con el invitado, cerrar sesión
+              if (session && isInviteFlow && session.user?.email.toLowerCase() !== invited.toLowerCase()) {
+                supabase.auth.signOut().then(() => {
+                  window.location.href = `/register?invited=${encodeURIComponent(invited)}&token=${token}`;
+                });
+                return null; // Evita renderizar momentáneamente
+              }
+
               if (isInviteFlow || allowRegister || (session && session.user?.email_confirmed_at === null)) {
                 return <Register switchToLogin={() => (window.location.href = '/login')} />;
               }
