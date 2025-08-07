@@ -4,7 +4,7 @@ import './Register.css';
 import 'react-phone-input-2/lib/style.css';
 import PhoneInput from 'react-phone-input-2';
 import Swal from 'sweetalert2';
-import { FiEye, FiEyeOff } from 'react-icons/fi'; // ICONOS NUEVOS
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 
 export default function Register({ switchToLogin }) {
   const [nombre, setNombre] = useState('');
@@ -19,24 +19,12 @@ export default function Register({ switchToLogin }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const validateToken = async (token) => {
-      const { data, error } = await supabase.auth.getUser(token);
-      return !error && data?.user;
-    };
-
     const query = new URLSearchParams(window.location.search);
     const invitedEmail = query.get('invited');
     const token = query.get('token');
 
     if (invitedEmail && token) {
-      validateToken(token).then((isValid) => {
-        if (isValid) {
-          setEmail(invitedEmail);
-        } else {
-          lanzarAlerta('Token inválido', 'La invitación no es válida o ha expirado.', 'error');
-          window.location.replace('/login');
-        }
-      });
+      setEmail(invitedEmail);
     }
   }, []);
 
@@ -152,23 +140,23 @@ export default function Register({ switchToLogin }) {
 
   return (
     <div className="auth-container">
-      <form  onSubmit={handleRegister}>
+      <form onSubmit={handleRegister}>
         <h2>Crear cuenta</h2>
 
         <input
-          className='input-1'
+          className="input-1"
           type="text"
           placeholder="Nombre"
           value={nombre}
-          onChange={e => setNombre(e.target.value)}
+          onChange={(e) => setNombre(e.target.value)}
         />
 
         <input
-          className='input-1'
+          className="input-1"
           type="text"
           placeholder="Apellido"
           value={apellido}
-          onChange={e => setApellido(e.target.value)}
+          onChange={(e) => setApellido(e.target.value)}
         />
 
         <PhoneInput
@@ -181,29 +169,29 @@ export default function Register({ switchToLogin }) {
         />
 
         <input
-          className='input-1'
+          className="input-1"
           type="email"
           placeholder="Correo electrónico"
           value={email}
-          onChange={e => setEmail(e.target.value)}
+          onChange={(e) => setEmail(e.target.value)}
           readOnly={new URLSearchParams(window.location.search).has('invited')}
         />
 
         <div className="password-container">
-            <input
+          <input
             ref={passRef}
             type={showPassword ? 'text' : 'password'}
-            className='input-1'
+            className="input-1"
             placeholder="Contraseña"
             value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
             onFocus={() => setPasswordTouched(true)}
           />
           <span
             className="toggle-password"
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => {
-              setShowPassword(p => !p);
+              setShowPassword((p) => !p);
               requestAnimationFrame(() => passRef.current?.focus());
             }}
             title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
@@ -235,26 +223,27 @@ export default function Register({ switchToLogin }) {
         </div>
 
         <div className="password-container">
-  <input
-    ref={confirmRef}
-    type={showConfirm ? 'text' : 'password'}
-    placeholder="Confirmar contraseña"
-    className='input-1'
-    value={confirmar}
-    onChange={e => setConfirmar(e.target.value)}
-  />
-  <span
-    className="toggle-password"
-    onMouseDown={(e) => e.preventDefault()}
-    onClick={() => {
-      setShowConfirm(p => !p);
-      requestAnimationFrame(() => confirmRef.current?.focus());
-    }}
-    title={showConfirm ? 'Ocultar confirmación' : 'Mostrar confirmación'}
-  >
-    {showConfirm ? <FiEyeOff /> : <FiEye />}
-  </span>
-</div>
+          <input
+            ref={confirmRef}
+            type={showConfirm ? 'text' : 'password'}
+            placeholder="Confirmar contraseña"
+            className="input-1"
+            value={confirmar}
+            onChange={(e) => setConfirmar(e.target.value)}
+          />
+          <span
+            className="toggle-password"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => {
+              setShowConfirm((p) => !p);
+              requestAnimationFrame(() => confirmRef.current?.focus());
+            }}
+            title={showConfirm ? 'Ocultar confirmación' : 'Mostrar confirmación'}
+          >
+            {showConfirm ? <FiEyeOff /> : <FiEye />}
+          </span>
+        </div>
+
         <button type="submit" disabled={loading}>
           {loading ? 'Registrando...' : 'Registrarme'}
         </button>
