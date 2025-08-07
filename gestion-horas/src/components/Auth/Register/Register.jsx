@@ -126,45 +126,39 @@ export default function Register({ switchToLogin }) {
 
       const cleanPhone = telefono.replace(/\D/g, '');
 
+            let inserted = false;
             let retries = 10;
-      let delayMs = 1000;
-      let inserted = false;
-      let lastError = null;
+            let lastError = null;
 
-      while (!inserted && retries > 0) {
-        // 🔍 Verificar si el user.id ya es visible para Postgres
-        const { data: checkUser, error: checkError } = await supabase
-          .from('auth.users')
-          .select('id')
-          .eq('id', userId)
-          .maybeSingle();
+            while (!inserted && retries > 0) {
+              // Intentar upsert en profiles
+              const { error: profileError } = await supabase
+                .from('profiles')
+                .upsert({
+                  id: userId,
+                  nombre: nombre.trim(),
+                  apellido: apellido.trim(),
+                  telefono: cleanPhone || null,
+                  email: email.trim()
+                }, { onConflict: 'id' });
 
-        if (!checkError && checkUser?.id) {
-          // ✅ Intentar el upsert en profiles
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .upsert({
-              id: userId,
-              nombre: nombre.trim(),
-              apellido: apellido.trim(),
-              telefono: cleanPhone || null,
-              email: email.trim()
-            }, { onConflict: 'id' });
+              if (!profileError) {
+                inserted = true;
+                break;
+              } else if (profileError.code === "23503") {
+                // La FK aún no se propagó → esperar
+                lastError = profileError;
+                await new Promise((res) => setTimeout(res, 2000));
+                retries--;
+              } else {
+                throw profileError;
+              }
+            }
 
-          if (!profileError) {
-            inserted = true;
-            break;
-          } else {
-            lastError = profileError;
-            if (profileError.code !== "23503") throw profileError;
-          }
-        }
-
-        await new Promise((res) => setTimeout(res, delayMs));
-        retries--;
-      }
-
-      if (!inserted) throw lastError || new Error("No se pudo insertar en profiles.");
+            if (!inserted) {
+              console.error("⛔ Último error al intentar upsert:", lastError);
+              throw lastError || new Error("No se pudo insertar en profiles.");
+            }
 
 
 
