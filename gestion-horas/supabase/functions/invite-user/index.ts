@@ -1,5 +1,4 @@
-// index.ts (Deno Deploy Edge Function) — Adaptado
-
+// index.ts (Deno Deploy Edge Function) — Adaptado a opción 2
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const CORS = {
@@ -25,15 +24,10 @@ Deno.serve(async (req) => {
     const email = (body?.email || "").trim();
     const redirectTo = (body?.redirectTo || "").trim();
 
-    if (!email) {
-      return new Response(JSON.stringify({ error: "email es requerido" }), {
-        status: 400,
-        headers: { ...CORS, "Content-Type": "application/json" }
-      });
-    }
-
-    if (!redirectTo) {
-      return new Response(JSON.stringify({ error: "redirectTo es requerido" }), {
+    if (!email || !redirectTo) {
+      return new Response(JSON.stringify({
+        error: !email ? "email es requerido" : "redirectTo es requerido"
+      }), {
         status: 400,
         headers: { ...CORS, "Content-Type": "application/json" }
       });
@@ -52,12 +46,11 @@ Deno.serve(async (req) => {
     }
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
-
     console.log("🔗 redirectTo recibido:", redirectTo);
 
-    // 1. Invitar usuario
+    // Invitar usuario (NO insertamos en profiles)
     const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
-      redirectTo // asegurate de incluir `type=invite` en este URL
+      redirectTo
     });
 
     if (error) {
@@ -69,32 +62,15 @@ Deno.serve(async (req) => {
 
     const userId = data.user?.id;
     if (!userId) {
-      return new Response(JSON.stringify({ error: "No se pudo obtener el user.id" }), {
-        status: 500,
-        headers: { ...CORS, "Content-Type": "application/json" }
-      });
-    }
-
-    // 2. Insertar en profiles (nombre vacío por ahora)
-    const { error: insertError } = await admin.from("profiles").insert({
-      id: userId,
-      email,
-      nombre: "",
-      apellido: "",
-      telefono: ""
-    });
-
-    if (insertError) {
-      console.error("Error al insertar en profiles:", insertError.message);
       return new Response(JSON.stringify({
-        error: "No se pudo insertar en profiles: " + insertError.message
+        error: "No se pudo obtener el user.id"
       }), {
         status: 500,
         headers: { ...CORS, "Content-Type": "application/json" }
       });
     }
 
-    // Éxito
+    // ✅ Éxito sin insertar en profiles
     return new Response(JSON.stringify({
       ok: true,
       userId
