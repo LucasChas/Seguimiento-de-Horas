@@ -176,6 +176,7 @@ export default function Register({ switchToLogin }) {
 
         <input
           className="input-1"
+          //Ayuda.
           type="text"
           placeholder="Nombre"
           value={nombre}
