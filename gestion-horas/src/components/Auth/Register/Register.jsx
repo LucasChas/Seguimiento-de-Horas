@@ -150,7 +150,7 @@ export default function Register({ switchToLogin }) {
           }
 
 
-        if (!error) {
+      if (!updateProfileError) {
           inserted = true;
         } else if (error.code === "23503") {
           lastError = error;
