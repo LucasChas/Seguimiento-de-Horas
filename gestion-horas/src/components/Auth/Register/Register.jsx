@@ -132,8 +132,9 @@ export default function Register({ switchToLogin }) {
 
     // Insertamos en la tabla profiles
     const cleanPhone = telefono.replace(/\D/g, '');
+    
     let inserted = false;
-    let retriesInsert = 5;
+    let retriesInsert = 10;
     let lastInsertError = null;
 
     while (!inserted && retriesInsert > 0) {
@@ -147,10 +148,12 @@ export default function Register({ switchToLogin }) {
 
       if (!profileError) {
         inserted = true;
-      } else {
+      } else if (profileError.code === "23503") {
         lastInsertError = profileError;
-        await new Promise((res) => setTimeout(res, 1000)); // espera 1s
+        await new Promise((res) => setTimeout(res, 1500)); // Esperar 1.5s
         retriesInsert--;
+      } else {
+        throw profileError; // otros errores, salir
       }
     }
 
