@@ -1,4 +1,3 @@
-// index.ts (Deno Deploy Edge Function) — Adaptado a opción 2
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const CORS = {
@@ -48,7 +47,7 @@ Deno.serve(async (req) => {
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
     console.log("🔗 redirectTo recibido:", redirectTo);
 
-    // Invitar usuario (NO insertamos en profiles)
+    // 1. Invitar usuario
     const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
       redirectTo
     });
@@ -70,7 +69,46 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ✅ Éxito sin insertar en profiles
+    // 2. Insertar en profiles (con retries si la FK aún no está lista)
+    let retries = 10;
+    let inserted = false;
+    let insertError = null;
+
+    while (retries > 0 && !inserted) {
+      const result = await admin.from("profiles").insert({
+        id: userId,
+        email,
+        nombre: "",
+        apellido: "",
+        telefono: ""
+      });
+
+      if (!result.error) {
+        inserted = true;
+        break;
+      }
+
+      if (result.error.code === "23503") {
+        insertError = result.error;
+        retries--;
+        await new Promise((res) => setTimeout(res, 1500));
+      } else {
+        insertError = result.error;
+        break;
+      }
+    }
+
+    if (!inserted) {
+      console.error("Error al insertar en profiles:", insertError?.message);
+      return new Response(JSON.stringify({
+        error: "No se pudo insertar en profiles: " + insertError?.message
+      }), {
+        status: 500,
+        headers: { ...CORS, "Content-Type": "application/json" }
+      });
+    }
+
+    // ✅ Éxito
     return new Response(JSON.stringify({
       ok: true,
       userId
