@@ -126,34 +126,46 @@ export default function Register({ switchToLogin }) {
 
       const cleanPhone = telefono.replace(/\D/g, '');
 
+            let retries = 10;
+      let delayMs = 1000;
       let inserted = false;
-      let retries = 10;
       let lastError = null;
 
       while (!inserted && retries > 0) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .upsert({
-            id: userId,
-            nombre: nombre.trim(),
-            apellido: apellido.trim(),
-            telefono: cleanPhone || null,
-            email: email.trim()
-          }, { onConflict: 'id' });
+        // 🔍 Verificar si el user.id ya es visible para Postgres
+        const { data: checkUser, error: checkError } = await supabase
+          .from('auth.users')
+          .select('id')
+          .eq('id', userId)
+          .maybeSingle();
 
-        if (!profileError) {
-          inserted = true;
-        } else if (profileError.code === "23503") {
-          // FK aún no se propagó
-          lastError = profileError;
-          await new Promise((res) => setTimeout(res, 1500));
-          retries--;
-        } else {
-          throw profileError;
+        if (!checkError && checkUser?.id) {
+          // ✅ Intentar el upsert en profiles
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .upsert({
+              id: userId,
+              nombre: nombre.trim(),
+              apellido: apellido.trim(),
+              telefono: cleanPhone || null,
+              email: email.trim()
+            }, { onConflict: 'id' });
+
+          if (!profileError) {
+            inserted = true;
+            break;
+          } else {
+            lastError = profileError;
+            if (profileError.code !== "23503") throw profileError;
+          }
         }
+
+        await new Promise((res) => setTimeout(res, delayMs));
+        retries--;
       }
 
-      if (!inserted) throw lastError;
+      if (!inserted) throw lastError || new Error("No se pudo insertar en profiles.");
+
 
 
       if (isInvite) {
