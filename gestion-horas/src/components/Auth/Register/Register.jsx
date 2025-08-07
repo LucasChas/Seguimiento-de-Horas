@@ -137,13 +137,13 @@ export default function Register({ switchToLogin }) {
 
       while (!inserted && retries > 0) {
         const { error: updateProfileError } = await supabase
-          .from('profiles')
-          .upsert({
-            id: userId,
-            nombre: nombre.trim(),
-            apellido: apellido.trim(),
-            telefono: cleanPhone || null
-          }, { onConflict: 'id' });
+            .from('profiles')
+            .update({
+              nombre: nombre.trim(),
+              apellido: apellido.trim(),
+              telefono: cleanPhone || null
+            })
+            .eq('id', userId);
 
           if (updateProfileError) {
             throw new Error("No se pudo actualizar el perfil: " + updateProfileError.message);
