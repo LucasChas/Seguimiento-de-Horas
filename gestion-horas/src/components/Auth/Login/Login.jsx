@@ -95,9 +95,12 @@ export default function Login({ onLogin }) {
 
         <button type="submit">Ingresar</button>
 
-        <p className="auth-toggle">
-          ¿No tenés cuenta? <span onClick={() => navigate('/register')}>Registrate acá</span>
-        </p>
+       <p className="auth-toggle">
+              ¿No tenés cuenta?{' '}
+              <span onClick={() => navigate('/register', { state: { fromLogin: true } })}>
+                Registrate acá
+              </span>
+            </p>
         <p className="auth-small-link" onClick={() => navigate('/recover')}>
           ¿Olvidaste tu contraseña?
         </p>

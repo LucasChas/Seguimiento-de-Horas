@@ -1,6 +1,6 @@
 // App.jsx
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate,useLocation  } from 'react-router-dom';
 import { supabase } from '../supabase/client';
 
 import Login from './components/Auth/Login/Login';
@@ -21,7 +21,8 @@ function ProtectedRoute({ session, children }) {
 function App() {
   const [session, setSession] = useState(null);
   const [holidays, setHolidays] = useState([]);
-  const [allowRegister, setAllowRegister] = useState(false);
+  const [allowRegister, setAllowRegister] = useState(true);
+
 
   // Escuchar cambios de sesión y cargar sesión inicial
   useEffect(() => {
@@ -70,33 +71,48 @@ function App() {
     <Router>
       <Routes>
         <Route
-          path={"/login" || "/"}
-          element={
-            session ? (
-              <Navigate to="/calendar" />
-            ) : (
-              <Login onLogin={() => supabase.auth.getSession().then(({ data }) => setSession(data.session))} />
-            )
-          }
-        />
+            path="/"
+            element={<Navigate to="/login" replace />}
+          />
 
+          <Route
+            path="/login"
+            element={
+              session ? (
+                <Navigate to="/calendar" />
+              ) : (
+                <Login onLogin={() => supabase.auth.getSession().then(({ data }) => setSession(data.session))} />
+              )
+            }
+          />
         <Route path="/recover" element={<RecoverPassword />} />
         <Route path="/reset" element={<ResetPassword />} />
 
-        <Route
-          path="/register"
-          element={
-            allowRegister ||
-            new URLSearchParams(window.location.search).get('invited') ||
-            (session && session.user?.email_confirmed_at === null) ? (
-              <Register switchToLogin={() => (window.location.href = '/login')} />
-            ) : session ? (
-              <Navigate to="/calendar" />
-            ) : (
-              <Navigate to="/login" />
-            )
-          }
-        />
+         <Route
+            path="/register"
+            element={
+              (() => {
+                const search = new URLSearchParams(window.location.search);
+                const hash = new URLSearchParams(window.location.hash.replace('#', ''));
+                const access_token = hash.get('access_token') || search.get('access_token');
+                const invited = search.get('invited');
+                const type = hash.get('type') || search.get('type');
+
+                const location = window.location; // reemplazá esto por `useLocation()` si movés el código dentro de un componente funcional
+                const isInviteFlow = invited && access_token && type === 'invite';
+
+                const state = JSON.parse(sessionStorage.getItem('register_from_login')) || {};
+                const fromLogin = state?.fromLogin;
+
+                if (isInviteFlow || allowRegister || fromLogin) {
+                  return <Register switchToLogin={() => (window.location.href = '/login')} />;
+                }
+
+                if (session) return <Navigate to="/calendar" />;
+                return <Navigate to="/login" />;
+              })()
+            }
+          />
 
         <Route
           path="/*"
