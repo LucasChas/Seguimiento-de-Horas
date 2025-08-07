@@ -77,25 +77,23 @@ export default function Register({ switchToLogin }) {
     const invitedEmail = query.get('invited');
     const isInvite = query.get('type') === 'invite';
 
-
     setLoading(true);
 
     try {
       let userId;
 
       if (token && invitedEmail && isInvite) {
-         const { error: verifyError } = await supabase.auth.verifyOtp({
+        const { error: verifyError } = await supabase.auth.verifyOtp({
           email: invitedEmail,
           token,
           type: 'invite',
-      });
+        });
         if (verifyError) throw verifyError;
 
         const { error: updateError } = await supabase.auth.updateUser({
           password,
           data: { display_name: `${nombre.trim()} ${apellido.trim()}` },
         });
-
         if (updateError) throw updateError;
 
         let retries = 5;
@@ -126,50 +124,51 @@ export default function Register({ switchToLogin }) {
         userId = data.user.id;
       }
 
-      console.log("ID de usuario:", userId);
-
       const cleanPhone = telefono.replace(/\D/g, '');
 
-      // Retry insert en profiles hasta que la FK esté lista
       let inserted = false;
       let retries = 10;
       let lastError = null;
 
       while (!inserted && retries > 0) {
-        const { error: updateProfileError } = await supabase
-            .from('profiles')
-            .update({
-              nombre: nombre.trim(),
-              apellido: apellido.trim(),
-              telefono: cleanPhone || null
-            })
-            .eq('id', userId);
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({
+            id: userId,
+            nombre: nombre.trim(),
+            apellido: apellido.trim(),
+            telefono: cleanPhone || null,
+          }, { onConflict: 'id' });
 
-          if (updateProfileError) {
-            throw new Error("No se pudo actualizar el perfil: " + updateProfileError.message);
-          }
-
-
-      if (!updateProfileError) {
+        if (!profileError) {
           inserted = true;
-        } else if (error.code === "23503") {
-          lastError = error;
-          console.log("Esperando propagación del userId en auth.users...");
+        } else if (profileError.code === "23503") {
+          lastError = profileError;
           await new Promise((res) => setTimeout(res, 1500));
           retries--;
         } else {
-          throw error;
+          throw profileError;
         }
       }
 
       if (!inserted) throw lastError;
 
-      Swal.fire({
-        title: 'Registro exitoso',
-        text: 'Tu cuenta ha sido configurada exitosamente.',
-        icon: 'success',
-        confirmButtonColor: '#1a237e',
-      }).then(() => switchToLogin());
+      if (isInvite) {
+        Swal.fire({
+          title: 'Registro exitoso',
+          text: 'Tu cuenta ha sido configurada exitosamente.',
+          icon: 'success',
+          confirmButtonColor: '#1a237e',
+        }).then(() => switchToLogin());
+      } else {
+        Swal.fire({
+          title: 'Verificá tu correo',
+          text: 'Te enviamos un email para confirmar tu cuenta.',
+          icon: 'info',
+          confirmButtonColor: '#1a237e',
+        }).then(() => switchToLogin());
+      }
+
     } catch (err) {
       console.error(err);
       lanzarAlerta('Error', err.message, 'error');
