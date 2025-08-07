@@ -18,15 +18,14 @@ export default function Register({ switchToLogin }) {
   const [passwordTouched, setPasswordTouched] = useState(false);
   const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-      const query = new URLSearchParams(window.location.search);
-      const invitedEmail = query.get('invited');
-      const token = query.get('token');
+  useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    const invitedEmail = query.get('invited');
+    if (invitedEmail) {
+      setEmail(decodeURIComponent(invitedEmail));
+    }
+  }, []);
 
-      if (invitedEmail) {
-        setEmail(decodeURIComponent(invitedEmail));
-      }
-    }, []);
   const passRef = useRef(null);
   const confirmRef = useRef(null);
 
@@ -49,130 +48,128 @@ export default function Register({ switchToLogin }) {
   };
 
   const handleRegister = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!nombre || !apellido || !telefono || !email || !password || !confirmar) {
-    return lanzarAlerta('Campos incompletos', 'Todos los campos son obligatorios.');
-  }
-  if (!validarNombre(nombre)) {
-    return lanzarAlerta('Nombre inválido', 'Solo se permiten letras y espacios.');
-  }
-  if (!validarNombre(apellido)) {
-    return lanzarAlerta('Apellido inválido', 'Solo se permiten letras y espacios.');
-  }
-  if (!validarTelefono(telefono)) {
-    return lanzarAlerta('Teléfono inválido', 'Debe contener entre 8 y 15 números.');
-  }
-  if (!validarEmail(email)) {
-    return lanzarAlerta('Correo inválido', 'Ingresá un correo electrónico válido.');
-  }
-  if (password !== confirmar) {
-    return lanzarAlerta('Contraseñas distintas', 'Ambas contraseñas deben coincidir.');
-  }
-  if (!validarContraseña(password)) {
-    return lanzarAlerta('Contraseña insegura', 'Debe cumplir con todos los requisitos.');
-  }
+    if (!nombre || !apellido || !telefono || !email || !password || !confirmar) {
+      return lanzarAlerta('Campos incompletos', 'Todos los campos son obligatorios.');
+    }
+    if (!validarNombre(nombre)) {
+      return lanzarAlerta('Nombre inválido', 'Solo se permiten letras y espacios.');
+    }
+    if (!validarNombre(apellido)) {
+      return lanzarAlerta('Apellido inválido', 'Solo se permiten letras y espacios.');
+    }
+    if (!validarTelefono(telefono)) {
+      return lanzarAlerta('Teléfono inválido', 'Debe contener entre 8 y 15 números.');
+    }
+    if (!validarEmail(email)) {
+      return lanzarAlerta('Correo inválido', 'Ingresá un correo electrónico válido.');
+    }
+    if (password !== confirmar) {
+      return lanzarAlerta('Contraseñas distintas', 'Ambas contraseñas deben coincidir.');
+    }
+    if (!validarContraseña(password)) {
+      return lanzarAlerta('Contraseña insegura', 'Debe cumplir con todos los requisitos.');
+    }
 
-  const query = new URLSearchParams(window.location.search);
-  const token = query.get('token');
-  const invitedEmail = query.get('invited');
+    const query = new URLSearchParams(window.location.search);
+    const token = query.get('token');
+    const invitedEmail = query.get('invited');
 
-  setLoading(true);
+    setLoading(true);
 
-  try {
-    let userId;
+    try {
+      let userId;
 
-    if (token && invitedEmail) {
-      // Verificamos el token de invitación
-      const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
-        email: invitedEmail,
-        token,
-        type: 'invite',
-      });
+      if (token && invitedEmail) {
+        const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
+          email: invitedEmail,
+          token,
+          type: 'invite',
+        });
 
-      if (verifyError) throw verifyError;
+        if (verifyError) throw verifyError;
 
-      // Actualizamos la contraseña y nombre completo
-      const { error: updateError } = await supabase.auth.updateUser({
-        password,
-        data: { display_name: `${nombre.trim()} ${apellido.trim()}` },
-      });
-
-      if (updateError) throw updateError;
-
-      // Esperamos a que el usuario esté listo en Supabase Auth
-      let retries = 5;
-      let userData = null;
-
-      while (retries > 0) {
-        const { data: userResult, error: userError } = await supabase.auth.getUser();
-        if (userResult?.user?.id) {
-          userData = userResult.user;
-          break;
-        }
-        await new Promise((res) => setTimeout(res, 500)); // espera 0.5s
-        retries--;
-      }
-
-      if (!userData) throw new Error("No se pudo obtener el usuario tras verificar la invitación.");
-      userId = userData.id;
-    } else {
-      // Registro normal sin invitación
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
+        const { error: updateError } = await supabase.auth.updateUser({
+          password,
           data: { display_name: `${nombre.trim()} ${apellido.trim()}` },
-          emailRedirectTo: window.location.origin,
-        },
-      });
-      if (error) throw error;
-      userId = data.user.id;
-    }
+        });
 
-    // Insertamos en la tabla profiles
-    const cleanPhone = telefono.replace(/\D/g, '');
-    
-    let inserted = false;
-    let retriesInsert = 10;
-    let lastInsertError = null;
+        if (updateError) throw updateError;
 
-    while (!inserted && retriesInsert > 0) {
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: userId,
-        nombre: nombre.trim(),
-        apellido: apellido.trim(),
-        telefono: cleanPhone || null,
-        email: email.trim(),
-      });
+        let retries = 5;
+        let userData = null;
 
-      if (!profileError) {
-        inserted = true;
-      } else if (profileError.code === "23503") {
-        lastInsertError = profileError;
-        await new Promise((res) => setTimeout(res, 1500)); // Esperar 1.5s
-        retriesInsert--;
+        while (retries > 0) {
+          const { data: userResult, error: userError } = await supabase.auth.getUser();
+          if (userResult?.user?.id) {
+            userData = userResult.user;
+            break;
+          }
+          await new Promise((res) => setTimeout(res, 500));
+          retries--;
+        }
+
+        if (!userData) throw new Error("No se pudo obtener el usuario tras verificar la invitación.");
+        userId = userData.id;
       } else {
-        throw profileError; // otros errores, salir
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { display_name: `${nombre.trim()} ${apellido.trim()}` },
+            emailRedirectTo: window.location.origin,
+          },
+        });
+        if (error) throw error;
+        userId = data.user.id;
       }
+
+      console.log("ID de usuario:", userId);
+
+      const cleanPhone = telefono.replace(/\D/g, '');
+
+      let inserted = false;
+      let retriesInsert = 10;
+      let lastInsertError = null;
+
+      while (!inserted && retriesInsert > 0) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({
+            id: userId,
+            nombre: nombre.trim(),
+            apellido: apellido.trim(),
+            telefono: cleanPhone || null,
+            email: email.trim(),
+          }, { onConflict: 'id' });
+
+        if (!profileError) {
+          inserted = true;
+        } else if (profileError.code === "23503") {
+          lastInsertError = profileError;
+          await new Promise((res) => setTimeout(res, 1500));
+          retriesInsert--;
+        } else {
+          throw profileError;
+        }
+      }
+
+      if (!inserted) throw lastInsertError;
+
+      Swal.fire({
+        title: 'Registro exitoso',
+        text: 'Tu cuenta ha sido configurada exitosamente.',
+        icon: 'success',
+        confirmButtonColor: '#1a237e',
+      }).then(() => switchToLogin());
+    } catch (err) {
+      console.error(err);
+      lanzarAlerta('Error', err.message, 'error');
+    } finally {
+      setLoading(false);
     }
-
-    if (!inserted) throw lastInsertError;
-
-    Swal.fire({
-      title: 'Registro exitoso',
-      text: 'Tu cuenta ha sido configurada exitosamente.',
-      icon: 'success',
-      confirmButtonColor: '#1a237e',
-    }).then(() => switchToLogin());
-  } catch (err) {
-    console.error(err);
-    lanzarAlerta('Error', err.message, 'error');
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
   return (
     <div className="auth-container">
       <form onSubmit={handleRegister}>
