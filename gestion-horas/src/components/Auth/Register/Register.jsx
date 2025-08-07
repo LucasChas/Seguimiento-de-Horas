@@ -125,42 +125,25 @@ export default function Register({ switchToLogin }) {
       }
 
       const cleanPhone = telefono.replace(/\D/g, '');
+      const emailTrimmed = email.trim();
 
-            let inserted = false;
-            let retries = 10;
-            let lastError = null;
+      // ✅ Upsert por email, no por id (evita conflicto FK si el id no está bien sincronizado)
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: userId, // será usado si ya existe relación válida
+          email: emailTrimmed,
+          nombre: nombre.trim(),
+          apellido: apellido.trim(),
+          telefono: cleanPhone || null
+        }, {
+          onConflict: 'email'
+        });
 
-            while (!inserted && retries > 0) {
-              // Intentar upsert en profiles
-              const { error: profileError } = await supabase
-                .from('profiles')
-                .upsert({
-                  id: userId,
-                  nombre: nombre.trim(),
-                  apellido: apellido.trim(),
-                  telefono: cleanPhone || null,
-                  email: email.trim()
-                }, { onConflict: 'id' });
-
-              if (!profileError) {
-                inserted = true;
-                break;
-              } else if (profileError.code === "23503") {
-                // La FK aún no se propagó → esperar
-                lastError = profileError;
-                await new Promise((res) => setTimeout(res, 2000));
-                retries--;
-              } else {
-                throw profileError;
-              }
-            }
-
-            if (!inserted) {
-              console.error("⛔ Último error al intentar upsert:", lastError);
-              throw lastError || new Error("No se pudo insertar en profiles.");
-            }
-
-
+      if (profileError) {
+        console.error("⛔ Error al hacer upsert en profiles:", profileError.message);
+        throw profileError;
+      }
 
       if (isInvite) {
         Swal.fire({
