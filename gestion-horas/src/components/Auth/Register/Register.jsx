@@ -138,13 +138,12 @@ export default function Register({ switchToLogin }) {
       while (!inserted && retries > 0) {
         const { error } = await supabase
           .from('profiles')
-          .insert({
-            id: userId,
+          .update({
             nombre: nombre.trim(),
             apellido: apellido.trim(),
-            telefono: cleanPhone || null,
-            email: email.trim(),
-          });
+            telefono: cleanPhone || null
+          })
+          .eq('id', userId);
 
         if (!error) {
           inserted = true;
