@@ -138,11 +138,13 @@ export default function Register({ switchToLogin }) {
             nombre: nombre.trim(),
             apellido: apellido.trim(),
             telefono: cleanPhone || null,
+            email: email.trim()
           }, { onConflict: 'id' });
 
         if (!profileError) {
           inserted = true;
         } else if (profileError.code === "23503") {
+          // FK aún no se propagó
           lastError = profileError;
           await new Promise((res) => setTimeout(res, 1500));
           retries--;
@@ -152,6 +154,7 @@ export default function Register({ switchToLogin }) {
       }
 
       if (!inserted) throw lastError;
+
 
       if (isInvite) {
         Swal.fire({
