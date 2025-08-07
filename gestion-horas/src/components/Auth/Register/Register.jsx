@@ -75,19 +75,20 @@ export default function Register({ switchToLogin }) {
     const query = new URLSearchParams(window.location.search);
     const token = query.get('token');
     const invitedEmail = query.get('invited');
+    const isInvite = query.get('type') === 'invite';
+
 
     setLoading(true);
 
     try {
       let userId;
 
-      if (token && invitedEmail) {
-        const { error: verifyError } = await supabase.auth.verifyOtp({
+      if (token && invitedEmail && isInvite) {
+         const { error: verifyError } = await supabase.auth.verifyOtp({
           email: invitedEmail,
           token,
           type: 'invite',
-        });
-
+      });
         if (verifyError) throw verifyError;
 
         const { error: updateError } = await supabase.auth.updateUser({
