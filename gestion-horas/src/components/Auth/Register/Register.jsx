@@ -82,7 +82,7 @@ export default function Register({ switchToLogin }) {
       let userId;
 
       if (token && invitedEmail) {
-        const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
+        const { error: verifyError } = await supabase.auth.verifyOtp({
           email: invitedEmail,
           token,
           type: 'invite',
@@ -101,7 +101,7 @@ export default function Register({ switchToLogin }) {
         let userData = null;
 
         while (retries > 0) {
-          const { data: userResult, error: userError } = await supabase.auth.getUser();
+          const { data: userResult } = await supabase.auth.getUser();
           if (userResult?.user?.id) {
             userData = userResult.user;
             break;
@@ -129,33 +129,35 @@ export default function Register({ switchToLogin }) {
 
       const cleanPhone = telefono.replace(/\D/g, '');
 
+      // Retry insert en profiles hasta que la FK esté lista
       let inserted = false;
-      let retriesInsert = 10;
-      let lastInsertError = null;
+      let retries = 10;
+      let lastError = null;
 
-      while (!inserted && retriesInsert > 0) {
-        const { error: profileError } = await supabase
+      while (!inserted && retries > 0) {
+        const { error } = await supabase
           .from('profiles')
-          .upsert({
+          .insert({
             id: userId,
             nombre: nombre.trim(),
             apellido: apellido.trim(),
             telefono: cleanPhone || null,
             email: email.trim(),
-          }, { onConflict: 'id' });
+          });
 
-        if (!profileError) {
+        if (!error) {
           inserted = true;
-        } else if (profileError.code === "23503") {
-          lastInsertError = profileError;
+        } else if (error.code === "23503") {
+          lastError = error;
+          console.log("Esperando propagación del userId en auth.users...");
           await new Promise((res) => setTimeout(res, 1500));
-          retriesInsert--;
+          retries--;
         } else {
-          throw profileError;
+          throw error;
         }
       }
 
-      if (!inserted) throw lastInsertError;
+      if (!inserted) throw lastError;
 
       Swal.fire({
         title: 'Registro exitoso',
@@ -170,6 +172,7 @@ export default function Register({ switchToLogin }) {
       setLoading(false);
     }
   };
+
   return (
     <div className="auth-container">
       <form onSubmit={handleRegister}>
