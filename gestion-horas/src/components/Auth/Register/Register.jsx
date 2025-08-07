@@ -18,16 +18,15 @@ export default function Register({ switchToLogin }) {
   const [passwordTouched, setPasswordTouched] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const query = new URLSearchParams(window.location.search);
-    const invitedEmail = query.get('invited');
-    const token = query.get('token');
+    useEffect(() => {
+      const query = new URLSearchParams(window.location.search);
+      const invitedEmail = query.get('invited');
+      const token = query.get('token');
 
-    if (invitedEmail && token) {
-      setEmail(invitedEmail);
-    }
-  }, []);
-
+      if (invitedEmail) {
+        setEmail(decodeURIComponent(invitedEmail));
+      }
+    }, []);
   const passRef = useRef(null);
   const confirmRef = useRef(null);
 
@@ -152,12 +151,13 @@ export default function Register({ switchToLogin }) {
         />
 
         <input
-          className="input-1"
-          type="text"
-          placeholder="Apellido"
-          value={apellido}
-          onChange={(e) => setApellido(e.target.value)}
-        />
+            className="input-1"
+            type="email"
+            placeholder="Correo electrónico"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            readOnly={!!email}
+          />
 
         <PhoneInput
           country={'ar'}
