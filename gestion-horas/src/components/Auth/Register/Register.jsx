@@ -18,7 +18,7 @@ export default function Register({ switchToLogin }) {
   const [passwordTouched, setPasswordTouched] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
     const invitedEmail = query.get('invited');
     if (invitedEmail) {
@@ -28,6 +28,7 @@ export default function Register({ switchToLogin }) {
 
   const passRef = useRef(null);
   const confirmRef = useRef(null);
+
 
   const validarContraseña = (pass) =>
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+{}\[\]:;<>,.?~\\\/-]).{8,}$/.test(pass);
@@ -72,7 +73,7 @@ export default function Register({ switchToLogin }) {
       return lanzarAlerta('Contraseña insegura', 'Debe cumplir con todos los requisitos.');
     }
 
-    const query = new URLSearchParams(window.location.search);
+        const query = new URLSearchParams(window.location.search);
     const token = query.get('token');
     const invitedEmail = query.get('invited');
     const isInvite = query.get('type') === 'invite';
@@ -96,23 +97,10 @@ export default function Register({ switchToLogin }) {
         });
         if (updateError) throw updateError;
 
-        let retries = 5;
-        let userData = null;
+        const { data: userResult, error: userError } = await supabase.auth.getUser();
+        if (userError || !userResult?.user?.id) throw new Error('No se pudo obtener el usuario tras verificar la invitación.');
 
-        while (retries > 0) {
-          const { data: userResult } = await supabase.auth.getUser();
-          if (userResult?.user?.id) {
-            userData = userResult.user;
-            break;
-          }
-          await new Promise((res) => setTimeout(res, 500));
-          retries--;
-        }
-
-        if (!userData) throw new Error("No se pudo obtener el usuario tras verificar la invitación.");
-        const { data: user } = await supabase.auth.getUser()
-        const userId = user?.user?.id
-        console.log("User ID: (validarlo con el de supabase) - ", userId)
+        userId = userResult.user.id;
       } else {
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -129,39 +117,31 @@ export default function Register({ switchToLogin }) {
       const cleanPhone = telefono.replace(/\D/g, '');
       const emailTrimmed = email.trim();
 
-      // ✅ Upsert por email, no por id (evita conflicto FK si el id no está bien sincronizado)
       const { error: profileError } = await supabase
-          .from('profiles')
-          .upsert({
-            id: userId,
-            email: emailTrimmed,
-            nombre: nombre.trim(),
-            apellido: apellido.trim(),
-            telefono: cleanPhone || null
-          }, {
-            onConflict: 'email'
-          });
+        .from('profiles')
+        .upsert({
+          id: userId,
+          email: emailTrimmed,
+          nombre: nombre.trim(),
+          apellido: apellido.trim(),
+          telefono: cleanPhone || null,
+        }, {
+          onConflict: 'email'
+        });
 
       if (profileError) {
         console.error("⛔ Error al hacer upsert en profiles:", profileError.message);
         throw profileError;
       }
 
-      if (isInvite) {
-        Swal.fire({
-          title: 'Registro exitoso',
-          text: 'Tu cuenta ha sido configurada exitosamente.',
-          icon: 'success',
-          confirmButtonColor: '#1a237e',
-        }).then(() => switchToLogin());
-      } else {
-        Swal.fire({
-          title: 'Verificá tu correo',
-          text: 'Te enviamos un email para confirmar tu cuenta.',
-          icon: 'info',
-          confirmButtonColor: '#1a237e',
-        }).then(() => switchToLogin());
-      }
+      Swal.fire({
+        title: isInvite ? 'Registro exitoso' : 'Verificá tu correo',
+        text: isInvite
+          ? 'Tu cuenta ha sido configurada exitosamente.'
+          : 'Te enviamos un email para confirmar tu cuenta.',
+        icon: isInvite ? 'success' : 'info',
+        confirmButtonColor: '#1a237e',
+      }).then(() => switchToLogin());
 
     } catch (err) {
       console.error(err);
@@ -170,6 +150,7 @@ export default function Register({ switchToLogin }) {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="auth-container">
