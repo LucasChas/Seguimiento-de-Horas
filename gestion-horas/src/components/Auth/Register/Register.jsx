@@ -50,7 +50,8 @@ export default function Register({ switchToLogin }) {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-
+    setLoading(true);
+    try {
     if (!nombre || !apellido || !telefono || !email || !password || !confirmar) {
       return lanzarAlerta('Campos incompletos', 'Todos los campos son obligatorios.');
     }
@@ -73,83 +74,91 @@ export default function Register({ switchToLogin }) {
       return lanzarAlerta('Contraseña insegura', 'Debe cumplir con todos los requisitos.');
     }
 
-        const query = new URLSearchParams(window.location.search);
-    const token = query.get('token');
-    const invitedEmail = query.get('invited');
-    const isInvite = query.get('type') === 'invite';
+    const urlParams = new URLSearchParams(window.location.search);
+    const invitedEmail = urlParams.get('invited');
 
-    setLoading(true);
+    if (invitedEmail) {
+      // ✅ FLUJO INVITADO
+      const { data: profileUser, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', invitedEmail)
+        .single();
 
-    try {
-      let userId;
-
-      if (token && invitedEmail && isInvite) {
-        const { error: verifyError } = await supabase.auth.verifyOtp({
-          email: invitedEmail,
-          token,
-          type: 'invite',
-        });
-        if (verifyError) throw verifyError;
-
-        const { error: updateError } = await supabase.auth.updateUser({
-          password,
-          data: { display_name: `${nombre.trim()} ${apellido.trim()}` },
-        });
-        if (updateError) throw updateError;
-
-        const { data: userResult, error: userError } = await supabase.auth.getUser();
-        if (userError || !userResult?.user?.id) throw new Error('No se pudo obtener el usuario tras verificar la invitación.');
-
-        userId = userResult.user.id;
-      } else {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { display_name: `${nombre.trim()} ${apellido.trim()}` },
-            emailRedirectTo: window.location.origin,
-          },
-        });
-        if (error) throw error;
-        userId = data.user.id;
+      if (profileError || !profileUser?.id) {
+        throw new Error('No se encontró un perfil con ese email.');
       }
 
-      const cleanPhone = telefono.replace(/\D/g, '');
-      const emailTrimmed = email.trim();
+      const userId = profileUser.id;
 
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: userId,
-          email: emailTrimmed,
-          nombre: nombre.trim(),
-          apellido: apellido.trim(),
-          telefono: cleanPhone || null,
-        }, {
-          onConflict: 'email'
-        });
+      // Actualizar contraseña
+      const { error: updateAuthError } = await supabase.auth.updateUser({
+        password,
+      });
 
-      if (profileError) {
-        console.error("⛔ Error al hacer upsert en profiles:", profileError.message);
-        throw profileError;
+      if (updateAuthError) {
+        console.error("Error actualizando contraseña:", updateAuthError);
+        throw new Error('No se pudo actualizar la contraseña.');
+      }
+
+      // Upsert del perfil
+      const { error: upsertError } = await supabase.from('profiles').upsert({
+        id: userId,
+        email: invitedEmail,
+        nombre: nombre.trim(),
+        apellido: apellido.trim(),
+        telefono: telefono.trim(),
+      });
+
+      if (upsertError) throw new Error('Error al actualizar los datos del perfil.');
+
+      Swal.fire({
+        icon: 'success',
+        title: '¡Cuenta completada!',
+        text: 'Tu cuenta creada con exito.',
+        confirmButtonText: 'Iniciar sesión',
+      });
+    } else {
+      // ✅ FLUJO REGISTRO NUEVO
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (signUpError) throw new Error(signUpError.message);
+
+      const newUserId = signUpData.user.id;
+
+      const { error: insertError } = await supabase.from('profiles').insert({
+        id: newUserId,
+        email: email,
+        nombre: nombre.trim(),
+        apellido: apellido.trim(),
+        telefono: telefono.trim(),
+      });
+
+      if (insertError) {
+        throw new Error('Error al crear el perfil.');
       }
 
       Swal.fire({
-        title: isInvite ? 'Registro exitoso' : 'Verificá tu correo',
-        text: isInvite
-          ? 'Tu cuenta ha sido configurada exitosamente.'
-          : 'Te enviamos un email para confirmar tu cuenta.',
-        icon: isInvite ? 'success' : 'info',
-        confirmButtonColor: '#1a237e',
-      }).then(() => switchToLogin());
-
-    } catch (err) {
-      console.error(err);
-      lanzarAlerta('Error', err.message, 'error');
-    } finally {
-      setLoading(false);
+        icon: 'info',
+        title: '¡Registro exitoso!',
+        text: 'Verificá tu correo electrónico antes de iniciar sesión.',
+        confirmButtonText: 'Entendido',
+      }).then(() => navigate('/login'));
     }
-  };
+  } catch (error) {
+    console.error(error);
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: error.message || 'Ocurrió un error inesperado.',
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
 
   return (
