@@ -129,16 +129,15 @@ export default function Register({ switchToLogin }) {
 
       // ✅ Upsert por email, no por id (evita conflicto FK si el id no está bien sincronizado)
       const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: userId, // será usado si ya existe relación válida
-          email: emailTrimmed,
-          nombre: nombre.trim(),
-          apellido: apellido.trim(),
-          telefono: cleanPhone || null
-        }, {
-          onConflict: 'email'
-        });
+          .from('profiles')
+          .upsert({
+            email: emailTrimmed,
+            nombre: nombre.trim(),
+            apellido: apellido.trim(),
+            telefono: cleanPhone || null
+          }, {
+            onConflict: 'email'
+          });
 
       if (profileError) {
         console.error("⛔ Error al hacer upsert en profiles:", profileError.message);
