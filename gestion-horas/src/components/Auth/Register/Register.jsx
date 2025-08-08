@@ -113,11 +113,13 @@ export default function Register({ switchToLogin }) {
       if (upsertError) throw new Error('Error al actualizar los datos del perfil.');
 
       Swal.fire({
-        icon: 'success',
-        title: '¡Cuenta completada!',
-        text: 'Tu cuenta creada con exito.',
-        confirmButtonText: 'Iniciar sesión',
-      });
+          icon: 'success',
+          title: '¡Cuenta completada!',
+          text: 'Tu cuenta fue creada con éxito.',
+          confirmButtonText: 'Iniciar sesión',
+        }).then(() => {
+          window.location.href = '/login';
+        });
     } else {
       // ✅ FLUJO REGISTRO NUEVO
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
@@ -144,9 +146,9 @@ export default function Register({ switchToLogin }) {
       Swal.fire({
         icon: 'info',
         title: '¡Registro exitoso!',
-        text: 'Verificá tu correo electrónico antes de iniciar sesión.',
+        text: 'Verificá tu correo electrónico antes de iniciar sesión. En caso de no encontrarlo, revisa la bandeja de Spam',
         confirmButtonText: 'Entendido',
-      }).then(() => navigate('/login'));
+      });
     }
   } catch (error) {
     console.error(error);
