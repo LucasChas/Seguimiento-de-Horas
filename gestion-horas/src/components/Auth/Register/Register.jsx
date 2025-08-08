@@ -110,7 +110,9 @@ export default function Register({ switchToLogin }) {
         }
 
         if (!userData) throw new Error("No se pudo obtener el usuario tras verificar la invitación.");
-        userId = userData.id;
+        const { data: user } = await supabase.auth.getUser()
+        const userId = user?.user?.id
+        console.log("User ID: (validarlo con el de supabase) - ", userId)
       } else {
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -131,6 +133,7 @@ export default function Register({ switchToLogin }) {
       const { error: profileError } = await supabase
           .from('profiles')
           .upsert({
+            id: userId,
             email: emailTrimmed,
             nombre: nombre.trim(),
             apellido: apellido.trim(),
