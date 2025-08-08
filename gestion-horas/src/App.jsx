@@ -101,7 +101,7 @@ function App() {
               }
 
               if (isInviteFlow || allowRegister || (session && session.user?.email_confirmed_at === null)) {
-                return <Register switchToLogin={() => (window.location.href = '/login')} />;
+                return <Register switchToLogin={() => {supabase.auth.signOut().then(() => {window.location.href = '/login';});}} />;
               }
 
               if (session) return <Navigate to="/calendar" />;

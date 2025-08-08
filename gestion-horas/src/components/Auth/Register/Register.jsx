@@ -48,10 +48,10 @@ export default function Register({ switchToLogin }) {
     });
   };
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
+const handleRegister = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  try {
     if (!nombre || !apellido || !telefono || !email || !password || !confirmar) {
       return lanzarAlerta('Campos incompletos', 'Todos los campos son obligatorios.');
     }
@@ -91,17 +91,20 @@ export default function Register({ switchToLogin }) {
 
       const userId = profileUser.id;
 
-      // Actualizar contraseña
+      // ✅ Actualizar contraseña y display name
       const { error: updateAuthError } = await supabase.auth.updateUser({
         password,
+        data: {
+          display_name: `${nombre.trim()} ${apellido.trim()}`,
+        },
       });
 
       if (updateAuthError) {
-        console.error("Error actualizando contraseña:", updateAuthError);
+        console.error("Error actualizando usuario:", updateAuthError);
         throw new Error('No se pudo actualizar la contraseña.');
       }
 
-      // Upsert del perfil
+      // ✅ Upsert del perfil
       const { error: upsertError } = await supabase.from('profiles').upsert({
         id: userId,
         email: invitedEmail,
@@ -113,18 +116,26 @@ export default function Register({ switchToLogin }) {
       if (upsertError) throw new Error('Error al actualizar los datos del perfil.');
 
       Swal.fire({
-          icon: 'success',
-          title: '¡Cuenta completada!',
-          text: 'Tu cuenta fue creada con éxito.',
-          confirmButtonText: 'Iniciar sesión',
-        }).then(() => {
+        icon: 'success',
+        title: '¡Cuenta completada!',
+        text: 'Tu cuenta fue creada con éxito. Iniciá sesión para continuar.',
+        confirmButtonText: 'Ok',
+      }).then(() => {
+        // Forzar el deslogueo después del registro por invitación
+        supabase.auth.signOut().then(() => {
           window.location.href = '/login';
         });
+      });
     } else {
       // ✅ FLUJO REGISTRO NUEVO
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            display_name: `${nombre.trim()} ${apellido.trim()}`,
+          },
+        },
       });
 
       if (signUpError) throw new Error(signUpError.message);
@@ -146,7 +157,7 @@ export default function Register({ switchToLogin }) {
       Swal.fire({
         icon: 'info',
         title: '¡Registro exitoso!',
-        text: 'Verificá tu correo electrónico antes de iniciar sesión. En caso de no encontrarlo, revisa la bandeja de Spam',
+        text: 'Verificá tu correo electrónico antes de iniciar sesión. Revisá también la carpeta de Spam.',
         confirmButtonText: 'Entendido',
       });
     }
@@ -161,6 +172,7 @@ export default function Register({ switchToLogin }) {
     setLoading(false);
   }
 };
+;
 
 
   return (
